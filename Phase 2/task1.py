@@ -1,3 +1,4 @@
+import sys
 from pymongo import MongoClient
 from datetime import datetime
 import numpy as np
@@ -5,63 +6,48 @@ from scipy.sparse import lil_matrix
 from sklearn.decomposition import TruncatedSVD
 from sklearn.decomposition import PCA
 from numpy import linalg
-import gensim
+import gensim, lda
 
 startTime = datetime.now()
 
-def svd_reduction(array):
-    global npUserTermArray
-    print ("SVD::::::::")
-    U, S, V = linalg.svd(npUserTermArray, full_matrices=False)
+def svd_reduction(dataArray, k):
+    U, S, V = linalg.svd(dataArray, full_matrices=False)
 
-    # print (U)
-    # print ('---------------------------------------------')
-    # print (S)
-    # print ('---------------------------------------------')
-    # print (V)
-    # print ("::::::::::::")
-    # print ('')
-
-    # print ("U shape", U.shape)
-    # print ("S shape", S.shape)
-    # print ("V shape", V.shape)
+    termWeightMatrix = np.matmul(dataArray.transpose(), U[:,:k])
     
-    # print ("V trnspose", V.transpose().shape)
+    print ("Term Weight Array")
+    print (termWeightMatrix)
 
-    result = np.matmul(npUserTermArray, V.transpose())
-    print (result)
-    print (result.shape)
+    print ("Term Weight Array shape")
+    print (termWeightMatrix.shape)
 
-def pca_reduction(array):
-    print ("PCA::::::::")
 
-    covMatrix = np.cov(npUserTermArray)
-    print (covMatrix.diagonal())
-    # U, singularValues, V = linalg.svd(covMatrix,full_matrices=False)
+def pca_reduction(dataArray, k):
+    covMatrix = np.cov(dataArray)
+    U, singularValues, V = linalg.svd(covMatrix,full_matrices=False)
 
-    # print ("singularValues")
-    # print (singularValues)
-    # print (singularValues.shape)
+    termWeightMatrix = np.dot(dataArray.transpose(), U[:,:k])
 
-    # termWeightMatrix = np.dot(npUserTermArray.transpose(),U)
-    # termWeightMatrix = np.matmul(U.transpose(), npUserTermArray)
-    # termWeightMatrix = np.matmul(npUserTermArray.transpose(), V.transpose())
+    print ("Term Weight Array")
+    print (termWeightMatrix)
 
-    # print ("Term Weight Array")
-    # print (termWeightMatrix)
+    print ("Term Weight Array shape")
+    print (termWeightMatrix.shape)
 
-    # print ("Term Weight Array shape")
-    # print (termWeightMatrix.shape)
+def lda_reduction(dataArray, k):
+        sparseDataArray = lil_matrix(dataArray)
 
-    print ("::::::::::::")
+        model = lda.LDA(n_topics=20)
+        model.fit(sparseDataArray)  # model.fit_transform(X) is also available
+        topic_word = model.topic_word_  # model.components_ also works
+        n_top_words = 8
+        for i, topic_dist in enumerate(topic_word):
+            topic_words = np.array(all_terms)[np.argsort(topic_dist)][:-(n_top_words+1):-1]
+            print('Topic {}: {}'.format(i, ' '.join(topic_words)))
 
-def lda_red():
-    sa = lil_matrix(userTermArray)
-    ldamodel = gensim.models.ldamodel.LdaModel(sa, num_topics=2)
-    topics = ldamodel.get_topics()
-    print (topics)
-    print (topics.shape)
-
+        doc_topic = model.doc_topic_
+        for i in range(10):
+            print("{} (top topic: {})".format(all_users[i], doc_topic[i].argmax()))
 
 
 client = MongoClient('localhost', 27017)
@@ -71,15 +57,12 @@ users = db.descUser.find()
 user_count = db.descUser.count()
 all_terms = db.descUser.distinct("terms.term")
 
-#all_terms = sorted(all_terms)
-
-#print (all_terms)
-#print (len(all_terms))
-
 userTermArray = []
+all_users = []
 
 for user in users:
     termArr = [d for d in user["terms"]]
+    all_users.append(user["userId"])
     #tfArr = [d["tf"] for d in user["terms"]]
     tempArr= np.full((55180), 0)
 
@@ -93,13 +76,13 @@ for user in users:
 npUserTermArray = np.array(userTermArray)
 
 ###Numpy SVD
-#svd_reduction(npUserTermArray)
+#svd_reduction(npUserTermArray, k)
 
 
 ### PCA
-#pca_reduction(npUserTermArray)
+#pca_reduction(npUserTermArray, 8)
 
 ### LDA
-lda_red()
+lda_reduction(npUserTermArray, 8)
 
 print (datetime.now() - startTime)
