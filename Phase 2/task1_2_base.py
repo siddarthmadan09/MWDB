@@ -18,7 +18,8 @@ def computeDataArray(dataFamily="user"):
     elif dataFamily == "image":
         collection = db.descImage
     else:
-        collection = db.descLocatioin
+        ##convert location id to location name first
+        collection = db.descLocation
 
     all_data = collection.find()
 
@@ -27,6 +28,8 @@ def computeDataArray(dataFamily="user"):
     documentTermArray = []
     all_documents = []
     key = dataFamily + "Id"
+    if dataFamily == "location":
+        key = "locationName"
 
     for data in all_data:
         termArr = [d for d in data["terms"]]
@@ -39,6 +42,7 @@ def computeDataArray(dataFamily="user"):
                 index = all_terms.index(term['term'])
                 tempArr[index] = term['tf']
         documentTermArray.append(tempArr)
+
     npDocumentTermArray = np.array(documentTermArray)
 
     return npDocumentTermArray, all_documents, all_terms
