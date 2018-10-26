@@ -49,12 +49,12 @@ def computeDataArray(dataFamily="user"):
 
 
 def svd_reduction(dataArray, k, get="feature-latent"):
-    U, S, V = linalg.svd(dataArray, full_matrices=False)
+    U, singularValues, V = linalg.svd(dataArray, full_matrices=False)
 
     if get=="feature-latent":
         return np.matmul(dataArray.transpose(), U[:,:k])
     else:
-        return np.matmul(dataArray, V.transpose()[:k,:])
+        return np.matmul(dataArray, V.transpose())
 
 
 
@@ -65,7 +65,7 @@ def pca_reduction(dataArray, k, get="feature-latent"):
     if get=="feature-latent":
         return np.matmul(dataArray.transpose(), U[:,:k])
     else:
-        return np.matmul(dataArray, V.transpose()[:k,:])
+        return np.matmul(dataArray, V.transpose())
 
 def lda_reduction(dataArray, k):
     sparseDataArray = lil_matrix(dataArray)
