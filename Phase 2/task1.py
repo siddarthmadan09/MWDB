@@ -6,7 +6,7 @@ from scipy.sparse import lil_matrix
 from sklearn.decomposition import TruncatedSVD
 from sklearn.decomposition import PCA
 from numpy import linalg
-import gensim, lda
+import lda
 
 import task1_2_base
 

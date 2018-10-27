@@ -54,7 +54,12 @@ def svd_reduction(dataArray, k, get="feature-latent"):
     if get=="feature-latent":
         return np.matmul(dataArray.transpose(), U[:,:k])
     else:
-        return np.matmul(dataArray, V.transpose())
+        # print ("Shape of U: ", U.shape)
+        # print ("Shape of S: ", singularValues.shape)
+        # print ("Shape of V: ", V.shape)
+        # print ("Shape of V transpose: ", V.transpose().shape)
+        # print ("Shape of dataArray: ", dataArray.shape)
+        return np.matmul(dataArray, V.transpose()[:,:k])
 
 
 
@@ -76,3 +81,31 @@ def lda_reduction(dataArray, k):
     doc_topic = model.doc_topic_
 
     return topic_word, doc_topic
+
+    
+def euclideansimilarity(objlatentpairs,docs,terms,dataId):
+    index_original = docs.index(dataId)
+    # print ("Index of dataId: ", index_original)
+    temp_arr_ls_docs = objlatentpairs[index_original]
+    # print ("First vector in object latent paurs: ", objlatentpairs[:1,:])
+    # print ("Shape of data vector: ", temp_arr_ls_docs.shape)
+    ## iterate thru each row, subtract with data, get norm - > similarity score for that row 
+    resultArray = []
+    for i in range(0, len(objlatentpairs)):
+        sub = np.subtract(objlatentpairs[i], temp_arr_ls_docs)
+        dist = np.linalg.norm(sub)
+        resultArray.append({
+            "dataId": docs[i],
+            "score": dist
+        })
+
+    resultArray = sorted(resultArray, key=lambda k: k['score'])
+    print ("============ Most Similar 5 Data Ids ==============")
+
+    for i in range(5):
+        print (i+1, "DataId:", resultArray[i]['dataId'], "Score = ", resultArray[i]['score'] )
+
+    # print ("Shape of subtracted: ", sub.shape)
+    
+    # print ("shape of L2 distance", dist.shape)
+    # print ("First vector in L2 dist: ", dist)

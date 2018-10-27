@@ -18,8 +18,10 @@ if len(sys.argv) == 5:
     if decompositionMethod == "svd":
         objectLatentPairs = task1_2_base.svd_reduction(dataArray, k, "object-latent")
         ## do similarity search with given id
-        print (objectLatentPairs)
-        print (objectLatentPairs.shape)
+        sim_arr = task1_2_base.euclideansimilarity(objectLatentPairs,docs,terms,dataId)
+
+        # print (objectLatentPairs)
+        # print (objectLatentPairs.shape)
     elif decompositionMethod == "pca":
         objectLatentPairs = task1_2_base.pca_reduction(dataArray, k, "object-latent")
         ## do similarity search with given id
