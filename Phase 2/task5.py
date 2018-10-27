@@ -10,13 +10,14 @@ import datetime
 #import scipy.sparse
 #from numpy.linalg import svd
 import numpy as np
+from sklearn.cluster import KMeans
 from numpy import dot
 from numpy.linalg import norm
 #from sklearn.decomposition import PCA
 from numpy.linalg import svd
 from scipy import spatial
 #from sklearn.decomposition import LatentDirichletAllocation
-
+objectLSMatrix=[]
 startTime = datetime.datetime.now()
 fileName = ''
 locationName = ""
@@ -59,11 +60,14 @@ def returnSingleReducedVectorFOrAllModelsForLocation(targetFileNames):
 
             print "Original Data Matrix Ready for " + str(file)
             print "Rows = " + str(len(originalDataMatrix)) + "Cols = " + str(len(originalDataMatrix[0]))
+            # reducing original data matrix to 5 clusters
+            kmeans = KMeans(n_clusters=5, random_state=0).fit(originalDataMatrix)
+            matrixToUse = kmeans.cluster_centers_
             if sys.argv[3].upper() == "SVD":
-                U, singularValues, V = svd(originalDataMatrix, full_matrices=False)
+                U, singularValues, V = svd(matrixToUse, full_matrices=False)
             elif sys.argv[3].upper() == "PCA":
                 print "PCA partially implemented"
-                covMatrix = np.cov(originalDataMatrix)
+                covMatrix = np.cov(matrixToUse)
                 U, singularValues, V = svd(covMatrix, full_matrices=False)
             elif sys.argv[3].upper() == "LDA":
                 print "LDA not implemented"
@@ -90,12 +94,16 @@ def returnSingleReducedVectorFOrAllModelsForLocation(targetFileNames):
             print "Transposed Reduced matrix created with rows = " + str(len(transArr)) + " and columns = " + str(len(transArr[0]))
             # get Object x LS matrix
             if sys.argv[3].upper() == "SVD":
+                global objectLSMatrix
                 objectLSMatrix = np.dot(originalDataMatrix, transArr)
             elif sys.argv[3].upper() == "PCA":
                 objectLSMatrix = np.dot(covMatrix, transArr)
             print "Object x LS matrix created with rows = " + str(len(objectLSMatrix)) + " and columns = " + str(
                 len(objectLSMatrix[0]))
-            # reduce all objects to single object feature vector
+
+            # reduce all vectors into 5 clusters
+            #kmeans = KMeans(n_clusters=5, random_state=0).fit(objectLSMatrix)
+            # reduce all clusters center vectors to single object feature vector
             reducedVector = reduceVectorsToSingleVector(objectLSMatrix)
             print "File reduced to single vector of length = " + str(len(reducedVector))
             print reducedVector
@@ -111,8 +119,8 @@ def calculateSimilarityScoreUsingL1(targetVector,vectorBeingCompared):
 def calculateSimilarityScoreUsingL2(targetVector,vectorBeingCompared):
     score = 0.0
     for index in range(len(targetVector)):
-        score+= math.sqrt(pow(targetVector[index],2)+ pow(vectorBeingCompared[index],2))
-    return score
+        score+= pow(targetVector[index]-vectorBeingCompared[index],2)
+    return math.sqrt(score)
 
 def calculateSimilarityScoreUsingCosine(targetVector,vectorBeingCompared):
     result = 1 - spatial.distance.cosine(targetVector, vectorBeingCompared)
@@ -158,7 +166,7 @@ print "All files reduced to single vectors"
 #calculate similarity scores between all vectors n allFileClusterVectors and targetReducedVector and finally return least 5 scores
 scoresArr=[]
 for idx, fileVector in enumerate(allFileClusterVectors):
-    scoresArr.append(calculateSimilarityScoreUsingL1(targetReducedVector,fileVector))
+    scoresArr.append(calculateSimilarityScoreUsingL2(targetReducedVector,fileVector))
 
 print "Scores Calculated"
 print scoresArr
@@ -176,6 +184,9 @@ print "============ Most Similar 5 Locations for " + locationName +"=========="
 for i in mostSimilarIndexes:
     print "Location = "+str(otherLocationNames[i])+" Score = "+str(scoresArr[i])
 
+#
+# print "OBJECT MATRIX"
+# print objectLSMatrix
 
 print "\n Total Time taken to Execute"
 print str(datetime.datetime.now()-startTime)

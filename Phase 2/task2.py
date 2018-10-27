@@ -1,33 +1,29 @@
 import sys
-from pymongo import MongoClient
 from datetime import datetime
-import numpy as np
-from scipy.sparse import lil_matrix
-from sklearn.decomposition import TruncatedSVD
-from sklearn.decomposition import PCA
-from numpy import linalg
-import gensim, lda
-
 import task1_2_base
 
 startTime = datetime.now()
 
-## input: python task1 user/image/location svd/pca/lda k
+## input format: python task1 user/image/location svd/pca/lda k user/image/location_ID
 
 ### Start
-if len(sys.argv) == 4:
+if len(sys.argv) == 5:
     dataType = str(sys.argv[1])
     decompositionMethod = str(sys.argv[2])
     k = int(sys.argv[3])
+    dataId = str(sys.argv[4])
 
     dataArray, docs, terms = task1_2_base.computeDataArray(dataFamily=dataType)
 
     if decompositionMethod == "svd":
-        termWeightPairs = task1_2_base.svd_reduction(dataArray, k)
-        print (termWeightPairs)
+        objectLatentPairs = task1_2_base.svd_reduction(dataArray, k, "object-latent")
+        ## do similarity search with given id
+        print (objectLatentPairs)
+        print (objectLatentPairs.shape)
     elif decompositionMethod == "pca":
-        termWeightPairs = task1_2_base.pca_reduction(dataArray, k)
-        print (termWeightPairs)
+        objectLatentPairs = task1_2_base.pca_reduction(dataArray, k, "object-latent")
+        ## do similarity search with given id
+        print (objectLatentPairs)
     elif decompositionMethod == "lda":
         topicWord, documentWord = task1_2_base.lda_reduction(dataArray, k)
         print (documentWord)
