@@ -13,16 +13,14 @@ import numpy as np
 import scipy.sparse
 from sklearn.cluster import KMeans
 #from scipy import spatials
-import pprint
+#import pprint
 
 import tensorly as tl
 from tensorly.decomposition import parafac
 
-
-
-
 startTime = datetime.datetime.now()
 
+#function to convert all entries in a CSV File into a list
 def getCSVDataAsListData(fileName):
     mainData = []
     with open(fileName) as csv_file:
@@ -31,6 +29,7 @@ def getCSVDataAsListData(fileName):
             mainData.append(row)
         return mainData
 
+#function which takes input objects (either users or images), collects the Terms in each row and returns it
 def returnUserTerms(row):
     col_count = 1
     tempTermArray = []
@@ -40,11 +39,13 @@ def returnUserTerms(row):
     tempTermArray.pop()
     return tempTermArray
 
+#function that calculates the sindex of the starting term for any given row(list of data)
 def calculateStartingTermIndex(row):
     index = 0
     loacationNameWords = row[0].count('_')
     return loacationNameWords+2
 
+#unction which takes input objects (locations), collects the Terms in each row and returns it
 def returnUserTermsForLocation(row):
     col_count = calculateStartingTermIndex(row)
     tempTermArray = []
@@ -54,52 +55,39 @@ def returnUserTermsForLocation(row):
     tempTermArray.pop()
     return tempTermArray
 
+k = int(sys.argv[1])
+userFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerUser.csv'
+locationFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerPOI.wFolderNames.csv'
+imageFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerImage.csv'
 
-userFileName = 'devset_textTermsPerUser.csv'
-locationFileName = 'devset_textTermsPerPOI.wFolderNames.csv'
-imageFileName = 'devset_textTermsPerImage.csv'
-
-userFileData = getCSVDataAsListData(userFileName)
-imageFileData = getCSVDataAsListData(imageFileName)
-locationFileData = getCSVDataAsListData(locationFileName)
+userFileData = getCSVDataAsListData(userFileName)#converting user csv file data into a list
+imageFileData = getCSVDataAsListData(imageFileName)#converting image csv file data into a list
+locationFileData = getCSVDataAsListData(locationFileName)#converting location csv file data into a list
 
 print ("User FIle Data Length = "+str(len(userFileData)))
 print ("image FIle Data Length = "+str(len(imageFileData)))
 print ("location FIle Data Length = "+str(len(locationFileData)))
 
-originalDataTensor=[[[0]*len(userFileData)]*len(imageFileData)]*len(locationFileData)
-val=0
-counter=0
+#originalDataTensor=[[[0]*len(userFileData)]*len(imageFileData)]*len(locationFileData)
+originalDataTensor = np.full((len(locationFileData), len(imageFileData), len(userFileData)), 0)#initializing the 3x3x3 matrix with all 0's intially
 for idx,location in enumerate(locationFileData):
     locationTerms = returnUserTermsForLocation(location)
     for idy,image in enumerate(imageFileData):
         imageTerms = returnUserTerms(image)
         for idz,user in enumerate(userFileData):
             userTerms = returnUserTerms(user)
-            commonTermsArray = set(userTerms) & set(imageTerms) & set(locationTerms)
-            counter=counter+1
-            #print (counter)
-            originalDataTensor[idx][idy][idz] = len(commonTermsArray)
-            #originalDataTensor[idx][idy][idz] = val
-            #val = (val+1)%2
+            commonTermsArray = set(userTerms) & set(imageTerms) & set(locationTerms)#finding intersection between userterms, imageterms and locationterms
+            originalDataTensor[idx][idy][idz] = len(commonTermsArray)#appending the count of similar terms into the 3D matrix
 
-#pprint.pprint(originalDataTensor)
-npArr = np.array(originalDataTensor)
-
-#tensor = tl.tensor(originalDataTensor)
-tensor2 = tl.tensor(npArr)
-
-#print ("Tensor")
-#print (tensor)
-#print ("single value")
-#print (tensor[0][0][0])
-#print (tensor2[0][0][0])
-#tensor[0][0][0] = 1.
-#tensor[0][0][1] = 1.
-#tensor[1][1][0] = 1.
-#print "Tensor Updated"
-#print tensor2
-
-print (parafac(tensor2,rank=5))
+npArr = np.asarray(originalDataTensor)#conversion of 3D matrix to a numpy 3D matrrix because tensor creation can only be possible with a numpy matrix
+tensor = tl.tensor(npArr)
+while (k!=0):
+    factormatrix = parafac(tensor,rank=k)#CP Decomposition. Here The array : factormatrix has 2 sub-arrays. Each containing one factor matrix for users, images and terms
+    for i in range(0,3):
+        print("============",i,"Factor Matrix","==============")
+        print(factormatrix[i])
+    print("If you wish to input another query, enter value of K else enter 0 to exit")
+    k = int(input())
+    
 print ("\n Total Time taken to Execute")
 print (str(datetime.datetime.now()-startTime))
