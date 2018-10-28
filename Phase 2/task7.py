@@ -13,13 +13,10 @@ import numpy as np
 import scipy.sparse
 from sklearn.cluster import KMeans
 #from scipy import spatials
-import pprint
+#import pprint
 
 import tensorly as tl
 from tensorly.decomposition import parafac
-
-
-
 
 startTime = datetime.datetime.now()
 
@@ -54,10 +51,10 @@ def returnUserTermsForLocation(row):
     tempTermArray.pop()
     return tempTermArray
 
-
-userFileName = 'devset_textTermsPerUser.csv'
-locationFileName = 'devset_textTermsPerPOI.wFolderNames.csv'
-imageFileName = 'devset_textTermsPerImage.csv'
+k = int(sys.argv[1])
+userFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerUser.csv'
+locationFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerPOI.wFolderNames.csv'
+imageFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerImage.csv'
 
 userFileData = getCSVDataAsListData(userFileName)
 imageFileData = getCSVDataAsListData(imageFileName)
@@ -67,9 +64,8 @@ print ("User FIle Data Length = "+str(len(userFileData)))
 print ("image FIle Data Length = "+str(len(imageFileData)))
 print ("location FIle Data Length = "+str(len(locationFileData)))
 
-originalDataTensor=[[[0]*len(userFileData)]*len(imageFileData)]*len(locationFileData)
-val=0
-counter=0
+#originalDataTensor=[[[0]*len(userFileData)]*len(imageFileData)]*len(locationFileData)
+originalDataTensor = np.full((len(locationFileData), len(imageFileData), len(userFileData)), 0)
 for idx,location in enumerate(locationFileData):
     locationTerms = returnUserTermsForLocation(location)
     for idy,image in enumerate(imageFileData):
@@ -77,29 +73,20 @@ for idx,location in enumerate(locationFileData):
         for idz,user in enumerate(userFileData):
             userTerms = returnUserTerms(user)
             commonTermsArray = set(userTerms) & set(imageTerms) & set(locationTerms)
-            counter=counter+1
-            #print (counter)
             originalDataTensor[idx][idy][idz] = len(commonTermsArray)
-            #originalDataTensor[idx][idy][idz] = val
-            #val = (val+1)%2
 
 #pprint.pprint(originalDataTensor)
-npArr = np.array(originalDataTensor)
-
+npArr = np.asarray(originalDataTensor)
+#print(npArr)
 #tensor = tl.tensor(originalDataTensor)
-tensor2 = tl.tensor(npArr)
-
-#print ("Tensor")
-#print (tensor)
-#print ("single value")
-#print (tensor[0][0][0])
-#print (tensor2[0][0][0])
-#tensor[0][0][0] = 1.
-#tensor[0][0][1] = 1.
-#tensor[1][1][0] = 1.
-#print "Tensor Updated"
-#print tensor2
-
-print (parafac(tensor2,rank=5))
+tensor = tl.tensor(npArr)
+while (k!=0):
+    factormatrix = parafac(tensor,rank=k)
+    for i in range(0,3):
+        print("============",i,"Factor Matrix","==============")
+        print(factormatrix[i])
+    print("If you wish to input another query, enter value of K else enter 0 to exit")
+    k = int(input())
+    
 print ("\n Total Time taken to Execute")
 print (str(datetime.datetime.now()-startTime))
