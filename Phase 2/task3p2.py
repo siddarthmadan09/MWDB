@@ -6,7 +6,7 @@ Created on Fri Oct 26 20:45:31 2018
 """
 
 # -*- coding: utf-8 -*-
-
+import operator
 import csv
 import sys
 import numpy as np
@@ -24,11 +24,11 @@ from numpy import linalg
 from datetime import datetime
 import pandas as pd
 # Open XML document using minidom parser
-DOMTree = xml.dom.minidom.parse(r"C:/Users/vagarw14/mwdb3/devset_topics.xml")
+DOMTree = xml.dom.minidom.parse(r"/Users/sidmadan/Documents/mwdb/materials/DevSet/devset_topics.xml")
 collection = DOMTree.documentElement
 locationImageData = []     # A list to store all images data vectors for all locations
 location_name_dict = {}    
-imageIds=[]                    # A list of all image IDS for all locations
+imageIds=[]            # A list of all image IDS for all locations
 imageScores = {}
 simScoresLoc = {}
 reducedLocations = []
@@ -83,7 +83,7 @@ def getImagedataByLoc(locationId, model,inputImageID,inputLocNumber):
     filenameX = location_name_dict[locationId] + ' ' + str(model)
     # print(filenameX)
     # CODE TO READ CSV LOCATION_MODEL FILE FOR LOCATION GIVEN
-    with open("C:/Users/vagarw14/mwdb3/descvis/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
+    with open("/Users/sidmadan/Documents/mwdb/materials/DevSet/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
         
         line = fp.readline()
         while line:
@@ -106,7 +106,7 @@ def getOneLocationVec(locationId, model,inputImageID,inputLocNumber):
     filenameX = location_name_dict[locationId] + ' ' + str(model)
     # print(filenameX)
     # CODE TO READ CSV LOCATION_MODEL FILE FOR LOCATION GIVEN
-    with open("C:/Users/vagarw14/mwdb3/descvis/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
+    with open("/Users/sidmadan/Documents/mwdb/materials/DevSet/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
         
         line = fp.readline()
         while line:
@@ -176,11 +176,32 @@ def lda_reduction(dataArray, k):
     model.fit(sparseDataArray)  # model.fit_transform(X) is also available
     topic_word = model.topic_word_  # model.components_ also works
     doc_topic = model.doc_topic_
+    latent = np.dot(dataArray,np.transpose(topic_word))
+    return latent
 
-    return topic_word, doc_topic            
-            
+def getLocationDataForLDA(np_locationImageData):
+    shift = []
+    for i in range(0,np_locationImageData.shape[1]):
+        temp_arr = np_locationImageData[:,i]
+        temp_arr = temp_arr[np.nonzero(temp_arr)]
+        minx=100000
+        for val in temp_arr:
+            if float(val)> float(minx):
+                val=minx
+        np_locationImageData[:, i] = (np_locationImageData[:,i] + abs(val))/abs(val)
+    np_locationImageData = np_locationImageData.astype(int)
+
+    # print(np_locationImageData)
+    latent = lda_reduction(np_locationImageData,4)
+    print("LDA done")
+    return latent
+
 def main():
-    imgID,model,decompositionMethod,kGiven = readInputImg()
+    # imgID,model,decompositionMethod,kGiven = readInputImg()
+    imgID = 1288780397
+    model = "CSD"
+    decompositionMethod = "SVD"
+    kGiven = "5"
 #    readInputImg()
     startTime = datetime.now()
     inputLocNumber = -1
@@ -189,10 +210,9 @@ def main():
     for locationId in location_name_dict.keys() :
         inputLocNumber = getImagedataByLoc(locationId, model,imgID,inputLocNumber)
     
-    print(np.array(locationImageData).shape)    
-        
-    print(inputLocNumber, location_name_dict[inputLocNumber])
-#    lda_reduction(locationImageData,8)
+    print(np.array(locationImageData).shape)
+
+   # lda_reduction(locationImageData,8)
     if decompositionMethod == "SVD":
         imageLatents = computeSvd(locationImageData, kGiven)
         print("SVD Latents ", np.array(imageLatents).shape)
@@ -201,20 +221,20 @@ def main():
         for row in range(0, np.size(imageLatents,0)):
             currentImageVector = imageLatents[row]
             currentImageID = imageIds[row]
-            imageScores = findSimiliarityDist(inputImageVector, currentImageVector, currentImageID)    
-    
-        imageScores  = sorted(imageScores.items(), key=operator.itemgetter(1))    
+            imageScores = findSimiliarityDist(inputImageVector, currentImageVector, currentImageID)
+
+        imageScores  = sorted(imageScores.items(), key=operator.itemgetter(1))
         print(*imageScores[:5],sep = "\n")
-    
+
         print("*" * 30)  # STARTING Comparison of Locations
-    
+
         RowsPerLoc = getRowsperLoc()
         getLocationLatents(imageLatents,RowsPerLoc)
         inputLocVector =  getInputLocVector(reducedLocations,inputLocNumber)
         simScoresLoc = calculateSimscores(reducedLocations,inputLocVector)
         simScoresLoc  = sorted(simScoresLoc.items(), key=operator.itemgetter(1))
         print(*simScoresLoc[:5], sep = "\n")
-        
+
     elif decompositionMethod == "PCA":
         imageLatents = computePca(locationImageData, kGiven)
         print("PCA Latests ", np.array(imageLatents).shape)
@@ -223,31 +243,39 @@ def main():
         for row in range(0, np.size(imageLatents,0)):
             currentImageVector = imageLatents[row]
             currentImageID = imageIds[row]
-            imageScores = findSimiliarityDist(inputImageVector, currentImageVector, currentImageID)    
-    
-        imageScores  = sorted(imageScores.items(), key=operator.itemgetter(1))    
+            imageScores = findSimiliarityDist(inputImageVector, currentImageVector, currentImageID)
+
+        imageScores  = sorted(imageScores.items(), key=operator.itemgetter(1))
         print(*imageScores[:5],sep = "\n")
-    
+
         print("*" * 30)  # STARTING Comparison of Locations
-    
+
         RowsPerLoc = getRowsperLoc()
         getLocationLatents(imageLatents,RowsPerLoc)
         inputLocVector =  getInputLocVector(reducedLocations,inputLocNumber)
         simScoresLoc = calculateSimscores(reducedLocations,inputLocVector)
         simScoresLoc  = sorted(simScoresLoc.items(), key=operator.itemgetter(1))
         print(*simScoresLoc[:5], sep = "\n")
-        
     elif decompositionMethod == "LDA":
-        shiftfactor = 100000
-        np_locationImageData = np.asarray(locationImageData)
-        shift = [abs(i) for i in np_locationImageData.min(axis=0)]
-        np_locationImageData = ((np_locationImageData + shift) * shiftfactor).astype(int)
+        imageLatents = getLocationDataForLDA(np.array(locationImageData))
+        index = imageIds.index(imgID)
+        inputImageVector = imageLatents[index]
+        for row in range(0, np.size(imageLatents,0)):
+            currentImageVector = imageLatents[row]
+            currentImageID = imageIds[row]
+            imageScores = findSimiliarityDist(inputImageVector, currentImageVector, currentImageID)
 
-        # print(np_locationImageData)
-        A, B = lda_reduction(np_locationImageData, kGiven)
-        print("~~~~LDA~~~~~~")
-        print(A[:3, :])
-        print(B[:3, :])     
+        imageScores  = sorted(imageScores.items(), key=operator.itemgetter(1))
+        print(*imageScores[:5],sep = "\n")
+
+        print("*" * 30)  # STARTING Comparison of Locations
+
+        RowsPerLoc = getRowsperLoc()
+        getLocationLatents(imageLatents,RowsPerLoc)
+        inputLocVector =  getInputLocVector(reducedLocations,inputLocNumber)
+        simScoresLoc = calculateSimscores(reducedLocations,inputLocVector)
+        simScoresLoc  = sorted(simScoresLoc.items(), key=operator.itemgetter(1))
+        print(*simScoresLoc[:5], sep = "\n")
     else:
         print ("Invalid decomposition method")
         sys.exit(0) 
@@ -255,5 +283,4 @@ def main():
     print ("\nTotal time taken: ", datetime.now() - startTime)
         
 main()
-    
     
