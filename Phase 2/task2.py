@@ -36,8 +36,14 @@ if len(sys.argv) == 5:
         task1_2_base.euclideansimilarity(objectLatentPairs, docs, terms, dataId)
 
     elif decompositionMethod == "lda":
-        topicWord, documentWord = task1_2_base.lda_reduction(dataArray, k)
-        print (documentWord)
+        documentTopic = task1_2_base.lda_reduction(dataArray, k, "object-latent")
+        #task1_2_base.euclideansimilarity(documentTopic, docs, terms, dataId)
+        #task1_2_base.calculateSimilarityScoreUsingCosine(documentTopic, docs, dataId)
+        task1_2_base.calculateSimilarityScoreUsingL1(documentTopic, docs, dataId)
+        # print (documentTopic[0])
+        # for i in range(10):
+        #     print("{} (top topic: {})".format(docs[i], documentTopic[i].argmax()))
+
     else:
         print ("Invalid decomposition method")
         sys.exit(0)

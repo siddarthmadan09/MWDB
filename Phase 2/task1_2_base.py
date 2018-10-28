@@ -1,4 +1,4 @@
-import sys
+import sys, csv
 from pymongo import MongoClient
 from datetime import datetime
 import numpy as np
@@ -9,6 +9,55 @@ from numpy import linalg
 import gensim, lda
 from sparsesvd import sparsesvd
 import pandas as pd
+from scipy import spatial
+
+def returnUserTerms(row):
+    col_count = 1
+    tempTermArray = []
+    while col_count < len(row):
+        tempTermArray.append(row[col_count])
+        col_count += 4
+    tempTermArray.pop()
+    return tempTermArray
+
+def returnUserTfValues(row):
+    col_count = 2
+    tempTermArray = []
+    while col_count < len(row):
+        tempTermArray.append(row[col_count])
+        col_count += 4
+    return tempTermArray
+
+
+def getCSVDataAsListData(fileName):
+    mainData = []
+    with open(fileName) as csv_file:
+        csvData = csv.reader(csv_file, delimiter=',')
+        for row in csvData:
+            mainData.append(row)
+        return mainData
+
+def computeImageTermArray(fileName):
+    client = MongoClient('localhost', 27017)
+    db = client['dev_data']
+    collection = db.descUser
+    AllTerms = collection.distinct("terms.term")
+    AllImages = collection.distinct("imageId")
+    UserTermArr = []
+
+    data = getCSVDataAsListData(fileName)
+    for row in data:
+        termArr = returnUserTerms(row)
+        tfArr = returnUserTfValues(row)
+        tempArr=[]
+        for index in range(len(AllTerms)):
+            if AllTerms[index] in termArr:
+                loc = termArr.index(AllTerms[index])
+                tempArr.append((int)(tfArr[loc]))
+            else:
+                tempArr.append(0)
+        UserTermArr.append(tempArr)
+    return np.asarray(UserTermArr), AllImages, AllTerms
 
 def computeDataArray(dataFamily="user"):
     client = MongoClient('localhost', 27017)
@@ -20,7 +69,6 @@ def computeDataArray(dataFamily="user"):
     elif dataFamily == "image":
         collection = db.descImage
     else:
-        ##convert location id to location name first
         collection = db.descLocation
 
     all_data = collection.find()
@@ -38,7 +86,7 @@ def computeDataArray(dataFamily="user"):
     for data in all_data:
         all_documents.append(data[key])
         #tfArr = [d["tf"] for d in user["terms"]]
-        tempArr= np.full((len(all_terms)), 0, dtype=np.int8)
+        tempArr= np.full((len(all_terms)), 0)
 
         for term in data["terms"]:
             if term['term'] in all_terms:
@@ -46,7 +94,7 @@ def computeDataArray(dataFamily="user"):
                 tempArr[index] = term['tf']
         documentTermArray.append(tempArr)
 
-    npDocumentTermArray = np.array(documentTermArray, dtype=np.int8)
+    npDocumentTermArray = np.array(documentTermArray)
 
     return npDocumentTermArray, all_documents, all_terms
 
@@ -74,17 +122,22 @@ def pca_reduction(dataArray, k, get="feature-latent"):
         return np.matmul(covMatrix, ut.transpose())
 
 
-def lda_reduction(dataArray, k):
+def lda_reduction(dataArray, k, get="feature-latent"):
     sparseDataArray = lil_matrix(dataArray)
 
     model = lda.LDA(n_topics=k, n_iter=200)
     model.fit(sparseDataArray)  # model.fit_transform(X) is also available
     topic_word = model.topic_word_  # model.components_ also works
     doc_topic = model.doc_topic_
+    # print ("topic_word", topic_word.shape)
+    # print ("dpc_topic", doc_topic.shape)
 
-    return topic_word, doc_topic
+    if get == "feature-latent":
+        return topic_word
+    else:
+        return doc_topic
 
-    
+
 def euclideansimilarity(objlatentpairs,docs,terms,dataId):
     index_original = docs.index(dataId)
     # print ("Index of dataId: ", index_original)
@@ -102,12 +155,47 @@ def euclideansimilarity(objlatentpairs,docs,terms,dataId):
         })
 
     resultArray = sorted(resultArray, key=lambda k: k['score'])
+
     print ("============ Most Similar 5 Data Ids ==============")
 
-    for i in range(5):
-        print (i+1, "DataId:", resultArray[i]['dataId'], "Score = ", resultArray[i]['score'] )
+    for i in range(10):
+        print (i+1, resultArray[i]['dataId'], "| Score = ", resultArray[i]['score'] )
 
-    # print ("Shape of subtracted: ", sub.shape)
+def calculateSimilarityScoreUsingCosine(objlatentpairs, docs, dataId):
+    index_original = docs.index(dataId)
+    temp_arr_ls_docs = objlatentpairs[index_original] 
+    resultArray = []
+    for i in range(0, len(objlatentpairs)):
+        result = 1 - spatial.distance.cosine(objlatentpairs[i], temp_arr_ls_docs)
+        resultArray.append({
+            "dataId": docs[i],
+            "score": result
+        })
     
-    # print ("shape of L2 distance", dist.shape)
-    # print ("First vector in L2 dist: ", dist)
+    resultArray = sorted(resultArray, key=lambda k: k['score'])
+
+    print ("============ Most Similar 5 Data Ids ==============")
+
+    for i in range(10):
+        print (i+1, resultArray[i]['dataId'], "| Score = ", resultArray[i]['score'] )
+
+def calculateSimilarityScoreUsingL1(objlatentpairs, docs, dataId):
+    index_original = docs.index(dataId)
+    temp_arr_ls_docs = objlatentpairs[index_original] 
+    resultArray = []
+    for i in range(0, len(objlatentpairs)):
+        score = 0.0
+        for index in range(len(temp_arr_ls_docs)):
+            score+=abs(temp_arr_ls_docs[index] - objlatentpairs[i][index])
+        
+        resultArray.append({
+            "dataId": docs[i],
+            "score": score
+        })
+    
+    resultArray = sorted(resultArray, key=lambda k: k['score'])
+
+    print ("============ Most Similar 5 Data Ids ==============")
+
+    for i in range(10):
+        print (i+1, resultArray[i]['dataId'], "| Score = ", resultArray[i]['score'] )
