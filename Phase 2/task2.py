@@ -29,13 +29,12 @@ if len(sys.argv) == 5:
 
     if decompositionMethod == "svd":
         objectLatentPairs = task1_2_base.svd_reduction(dataArray, k, "object-latent")
-        ## do similarity search with given id
         task1_2_base.euclideansimilarity(objectLatentPairs, docs, terms, dataId)
 
     elif decompositionMethod == "pca":
         objectLatentPairs = task1_2_base.pca_reduction(dataArray, k, "object-latent")
-        ## do similarity search with given id
-        print (objectLatentPairs)
+        task1_2_base.euclideansimilarity(objectLatentPairs, docs, terms, dataId)
+
     elif decompositionMethod == "lda":
         topicWord, documentWord = task1_2_base.lda_reduction(dataArray, k)
         print (documentWord)

@@ -8,6 +8,7 @@ from sklearn.decomposition import PCA
 from numpy import linalg
 import gensim, lda
 from sparsesvd import sparsesvd
+import pandas as pd
 
 def computeDataArray(dataFamily="user"):
     client = MongoClient('localhost', 27017)
@@ -62,14 +63,15 @@ def svd_reduction(dataArray, k, get="feature-latent"):
 
 def pca_reduction(dataArray, k, get="feature-latent"):
     covMatrix = np.cov(dataArray)
+    # df = pd.DataFrame(dataArray)
+    # covMatrix = df.cov()
     sparseDataArray = csc_matrix(covMatrix)
     ut, s, vt = sparsesvd(sparseDataArray, k)
 
     if get=="feature-latent":
-        return np.matmul(dataArray.transpose(), ut.transpose())
+        return np.matmul(dataArray.transpose(), vt.transpose())
     else:
-        return np.matmul(dataArray, vt.transpose())
-
+        return np.matmul(covMatrix, ut.transpose())
 
 
 def lda_reduction(dataArray, k):
