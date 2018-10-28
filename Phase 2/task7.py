@@ -20,6 +20,7 @@ from tensorly.decomposition import parafac
 
 startTime = datetime.datetime.now()
 
+#function to convert all entries in a CSV File into a list
 def getCSVDataAsListData(fileName):
     mainData = []
     with open(fileName) as csv_file:
@@ -28,6 +29,7 @@ def getCSVDataAsListData(fileName):
             mainData.append(row)
         return mainData
 
+#function which takes input objects (either users or images), collects the Terms in each row and returns it
 def returnUserTerms(row):
     col_count = 1
     tempTermArray = []
@@ -37,11 +39,13 @@ def returnUserTerms(row):
     tempTermArray.pop()
     return tempTermArray
 
+#function that calculates the sindex of the starting term for any given row(list of data)
 def calculateStartingTermIndex(row):
     index = 0
     loacationNameWords = row[0].count('_')
     return loacationNameWords+2
 
+#unction which takes input objects (locations), collects the Terms in each row and returns it
 def returnUserTermsForLocation(row):
     col_count = calculateStartingTermIndex(row)
     tempTermArray = []
@@ -56,32 +60,29 @@ userFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTe
 locationFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerPOI.wFolderNames.csv'
 imageFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerImage.csv'
 
-userFileData = getCSVDataAsListData(userFileName)
-imageFileData = getCSVDataAsListData(imageFileName)
-locationFileData = getCSVDataAsListData(locationFileName)
+userFileData = getCSVDataAsListData(userFileName)#converting user csv file data into a list
+imageFileData = getCSVDataAsListData(imageFileName)#converting image csv file data into a list
+locationFileData = getCSVDataAsListData(locationFileName)#converting location csv file data into a list
 
 print ("User FIle Data Length = "+str(len(userFileData)))
 print ("image FIle Data Length = "+str(len(imageFileData)))
 print ("location FIle Data Length = "+str(len(locationFileData)))
 
 #originalDataTensor=[[[0]*len(userFileData)]*len(imageFileData)]*len(locationFileData)
-originalDataTensor = np.full((len(locationFileData), len(imageFileData), len(userFileData)), 0)
+originalDataTensor = np.full((len(locationFileData), len(imageFileData), len(userFileData)), 0)#initializing the 3x3x3 matrix with all 0's intially
 for idx,location in enumerate(locationFileData):
     locationTerms = returnUserTermsForLocation(location)
     for idy,image in enumerate(imageFileData):
         imageTerms = returnUserTerms(image)
         for idz,user in enumerate(userFileData):
             userTerms = returnUserTerms(user)
-            commonTermsArray = set(userTerms) & set(imageTerms) & set(locationTerms)
-            originalDataTensor[idx][idy][idz] = len(commonTermsArray)
+            commonTermsArray = set(userTerms) & set(imageTerms) & set(locationTerms)#finding intersection between userterms, imageterms and locationterms
+            originalDataTensor[idx][idy][idz] = len(commonTermsArray)#appending the count of similar terms into the 3D matrix
 
-#pprint.pprint(originalDataTensor)
-npArr = np.asarray(originalDataTensor)
-#print(npArr)
-#tensor = tl.tensor(originalDataTensor)
+npArr = np.asarray(originalDataTensor)#conversion of 3D matrix to a numpy 3D matrrix because tensor creation can only be possible with a numpy matrix
 tensor = tl.tensor(npArr)
 while (k!=0):
-    factormatrix = parafac(tensor,rank=k)
+    factormatrix = parafac(tensor,rank=k)#CP Decomposition. Here The array : factormatrix has 2 sub-arrays. Each containing one factor matrix for users, images and terms
     for i in range(0,3):
         print("============",i,"Factor Matrix","==============")
         print(factormatrix[i])
