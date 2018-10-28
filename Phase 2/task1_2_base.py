@@ -2,11 +2,13 @@ import sys
 from pymongo import MongoClient
 from datetime import datetime
 import numpy as np
-from scipy.sparse import lil_matrix
+from scipy.sparse import lil_matrix, csc_matrix
 from sklearn.decomposition import TruncatedSVD
 from sklearn.decomposition import PCA
 from numpy import linalg
 import gensim, lda
+from sparsesvd import sparsesvd
+import pandas as pd
 
 def computeDataArray(dataFamily="user"):
     client = MongoClient('localhost', 27017)
@@ -26,51 +28,51 @@ def computeDataArray(dataFamily="user"):
     all_terms = collection.distinct("terms.term")
 
     documentTermArray = []
-    all_documents = []
+    
     key = dataFamily + "Id"
     if dataFamily == "location":
         key = "locationName"
+    
+    all_documents = collection.distinct(key)
 
     for data in all_data:
-        termArr = [d for d in data["terms"]]
         all_documents.append(data[key])
         #tfArr = [d["tf"] for d in user["terms"]]
-        tempArr= np.full((len(all_terms)), 0)
+        tempArr= np.full((len(all_terms)), 0, dtype=np.int8)
 
-        for term in termArr:
+        for term in data["terms"]:
             if term['term'] in all_terms:
                 index = all_terms.index(term['term'])
                 tempArr[index] = term['tf']
         documentTermArray.append(tempArr)
 
-    npDocumentTermArray = np.array(documentTermArray)
+    npDocumentTermArray = np.array(documentTermArray, dtype=np.int8)
 
     return npDocumentTermArray, all_documents, all_terms
 
 
 def svd_reduction(dataArray, k, get="feature-latent"):
-    U, singularValues, V = linalg.svd(dataArray, full_matrices=False)
+    sparseDataArray = csc_matrix(dataArray)
+    ut, s, vt = sparsesvd(sparseDataArray, k)
 
     if get=="feature-latent":
-        return np.matmul(dataArray.transpose(), U[:,:k])
+        return np.matmul(dataArray.transpose(), ut.transpose())
     else:
-        # print ("Shape of U: ", U.shape)
-        # print ("Shape of S: ", singularValues.shape)
-        # print ("Shape of V: ", V.shape)
-        # print ("Shape of V transpose: ", V.transpose().shape)
-        # print ("Shape of dataArray: ", dataArray.shape)
-        return np.matmul(dataArray, V.transpose()[:,:k])
-
+        return np.matmul(dataArray, vt.transpose())
 
 
 def pca_reduction(dataArray, k, get="feature-latent"):
     covMatrix = np.cov(dataArray)
-    U, singularValues, V = linalg.svd(covMatrix,full_matrices=False)
+    # df = pd.DataFrame(dataArray)
+    # covMatrix = df.cov()
+    sparseDataArray = csc_matrix(covMatrix)
+    ut, s, vt = sparsesvd(sparseDataArray, k)
 
     if get=="feature-latent":
-        return np.matmul(dataArray.transpose(), U[:,:k])
+        return np.matmul(dataArray.transpose(), vt.transpose())
     else:
-        return np.matmul(dataArray, V.transpose())
+        return np.matmul(covMatrix, ut.transpose())
+
 
 def lda_reduction(dataArray, k):
     sparseDataArray = lil_matrix(dataArray)
