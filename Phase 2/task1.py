@@ -12,7 +12,7 @@ import task1_2_base
 
 startTime = datetime.now()
 
-## input: python task1 user/image/location svd/pca/lda k
+## input: python task1.py user/image/location svd/pca/lda k
 
 ### Start
 if len(sys.argv) == 4:
