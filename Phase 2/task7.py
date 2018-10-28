@@ -55,17 +55,17 @@ def returnUserTermsForLocation(row):
     return tempTermArray
 
 
-userFileName = './testdata/devset_textTermsPerUser.csv'
-locationFileName = './testdata/devset_textTermsPerPOI.wFolderNames.csv'
-imageFileName = './testdata/devset_textTermsPerImage.csv'
+userFileName = 'devset_textTermsPerUser.csv'
+locationFileName = 'devset_textTermsPerPOI.wFolderNames.csv'
+imageFileName = 'devset_textTermsPerImage.csv'
 
 userFileData = getCSVDataAsListData(userFileName)
 imageFileData = getCSVDataAsListData(imageFileName)
 locationFileData = getCSVDataAsListData(locationFileName)
 
-print "User FIle Data Length = "+str(len(userFileData))
-print "image FIle Data Length = "+str(len(imageFileData))
-print "location FIle Data Length = "+str(len(locationFileData))
+print ("User FIle Data Length = "+str(len(userFileData)))
+print ("image FIle Data Length = "+str(len(imageFileData)))
+print ("location FIle Data Length = "+str(len(locationFileData)))
 
 originalDataTensor=[[[0]*len(userFileData)]*len(imageFileData)]*len(locationFileData)
 val=0
@@ -78,27 +78,28 @@ for idx,location in enumerate(locationFileData):
             userTerms = returnUserTerms(user)
             commonTermsArray = set(userTerms) & set(imageTerms) & set(locationTerms)
             counter=counter+1
-            print (counter)
+            #print (counter)
             originalDataTensor[idx][idy][idz] = len(commonTermsArray)
-            originalDataTensor[idx][idy][idz] = val
-            val = (val+1)%2
+            #originalDataTensor[idx][idy][idz] = val
+            #val = (val+1)%2
 
-pprint.pprint(originalDataTensor)
-#npArr = np.array(originalDataTensor)
+#pprint.pprint(originalDataTensor)
+npArr = np.array(originalDataTensor)
 
-tensor = tl.tensor(originalDataTensor)
-#tensor2 = tl.tensor(npArr)
+#tensor = tl.tensor(originalDataTensor)
+tensor2 = tl.tensor(npArr)
 
-print "Tensor"
-print tensor
-print "single value"
-print tensor[0][0][0]
+#print ("Tensor")
+#print (tensor)
+#print ("single value")
+#print (tensor[0][0][0])
+#print (tensor2[0][0][0])
 #tensor[0][0][0] = 1.
 #tensor[0][0][1] = 1.
 #tensor[1][1][0] = 1.
 #print "Tensor Updated"
 #print tensor2
 
-print parafac(originalDataTensor,rank=5)
-print "\n Total Time taken to Execute"
-print str(datetime.datetime.now()-startTime)
+print (parafac(tensor2,rank=5))
+print ("\n Total Time taken to Execute")
+print (str(datetime.datetime.now()-startTime))
