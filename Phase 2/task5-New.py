@@ -57,8 +57,8 @@ def createAllModelMatrix(targetFileNames):
         filedata = getCSVDataAsListData(file)
         print file
         print len(filedata)
-        if file == "./data/img/aztec_ruins LBP.csv":
-            print "Problem"
+        #if file == "./data/img/aztec_ruins LBP.csv":
+        #    print "Problem"
         fileDataNP = np.asarray(filedata)
         deletedArr = np.delete(fileDataNP,[0],axis=1)
         if len(finalVector) == 0:
@@ -125,9 +125,16 @@ print "Rows = " + str(len(reducedArr)) + " Out of " + str(len(V))
 print "Columns = " + str(len(reducedArr[0])) + " Out of " + str(len(V[0]))
 
 #adding IMageIDs to matrix
-# //imageIds = mat(:,2);
+
+allData = getCSVDataAsListData(targetFileNames[0])
+npArrayTemp = np.asarray(allData)
+ImageIdArr = npArrayTemp[:,:1]
+#print "imageIds"
+#print ImageIdArr
+wholeMatrix = np.append(ImageIdArr,lsMatrix,axis=1)
+#imageIds = mat(:,2);
 print "LS matrix calulated"
-dataframe = pd.DataFrame(data=lsMatrix.astype(float))
+dataframe = pd.DataFrame(data=wholeMatrix.astype(float))
 dataframe.to_csv('outfile_'+sys.argv[3].upper()+"_"+str(datetime.datetime.now())+'.csv', sep=' ', header=False, float_format='%.2f', index=False)
 print "file save done"
 
@@ -183,8 +190,8 @@ for idx, fileCluster in enumerate(otherLocationFileCluster):
         interClusDist.append(min_dist)
     locScores.append(statistics.mean(interClusDist))
 
-print "Location Scores"
-print locScores
+#print "Location Scores"
+#print locScores
 
 mostSimilarIndexes = sorted(range(len(locScores)), key=lambda i: locScores[i])[:(int)(sys.argv[2])]
 
