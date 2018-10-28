@@ -15,7 +15,7 @@ from sklearn.decomposition import PCA
 from numpy import linalg
 from datetime import datetime
 import pandas as pd
-
+from sklearn.preprocessing import MinMaxScaler
 # Open XML document using minidom parser
 DOMTree = xml.dom.minidom.parse(r"/Users/sidmadan/Documents/mwdb/materials/DevSet/devset_topics.xml")
 collection = DOMTree.documentElement
@@ -92,28 +92,6 @@ def getImagedataByLoc(locationId, model,inputImageID,inputLocNumber):
             line = fp.readline()
     AllRowsPerLoc.append(len(imageIds))
     return inputLocNumber
-    
-def getOneLocationVec(locationId, model,inputImageID,inputLocNumber):         
-    arr=[]
-    ImageData = []
-    filenameX = location_name_dict[locationId] + ' ' + str(model)
-    # print(filenameX)
-    # CODE TO READ CSV LOCATION_MODEL FILE FOR LOCATION GIVEN
-    with open("/Users/sidmadan/Documents/mwdb/materials/DevSet/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
-        
-        line = fp.readline()
-        while line:
-            arr = line.split(",")
-            arr[-1] = arr[-1][:-1]   # ALL IMAGE DATA WITHOUT IMAGE IDS
-            arr= [round(float(x),3) for x in arr]
-            if inputImageID==int(arr[0]):
-                inputLocNumber = locationId
-            ImageData.append(arr[1:])
-            line = fp.readline()
-
-        reducedLocationX = [sum(x)/len(ImageData) for x in zip(*ImageData)]
-        reducedLocations.append(reducedLocationX)
-    return inputLocNumber
 
 # get the number of objects present in each location.
 def getRowsperLoc():
@@ -154,29 +132,27 @@ def lda_reduction(dataArray, k):
     latent = np.dot(dataArray,np.transpose(topic_word))
     return latent
 
-def getLocationDataForLDA(np_locationImageData):
-    shift = []
-    for i in range(0,np_locationImageData.shape[1]):
-        temp_arr = np_locationImageData[:,i]
-        temp_arr = temp_arr[np.nonzero(temp_arr)]
-        minx=100000
-        for val in temp_arr:
-            if float(val)> float(minx):
-                val=minx
-        np_locationImageData[:, i] = (np_locationImageData[:,i] + abs(val))/abs(val)
-    np_locationImageData = np_locationImageData.astype(int)
+def getLocationDataForLDA(locationImageValues , k):
+    np_locationImageValues = np.asarray(locationImageValues)
+    scaler = MinMaxScaler()
+    scaler.fit(np_locationImageValues)
+    np_locationImageValues = scaler.transform(np_locationImageValues) * 1000
 
-    # print(np_locationImageData)
-    latent = lda_reduction(np_locationImageData,4)
-    print("LDA done")
-    return latent
+    rows, columns = np_locationImageValues.shape
+
+    for i in range(rows):
+        for j in range(columns):
+            np_locationImageValues[i][j] = round(np_locationImageValues[i][j])
+
+    np_locationImageValues = np_locationImageValues.astype(int)
+    return lda_reduction(np_locationImageValues, k)
 
 def main():
     # imgID,model,decompositionMethod,kGiven = readInputs()
 
     imgID = 1288780397
-    model = "CSD"
-    decompositionMethod = "SVD"
+    model = "GLRLM3x3"
+    decompositionMethod = "LDA"
     kGiven = 5
 
     startTime = datetime.now()
@@ -211,7 +187,7 @@ def main():
 
     elif decompositionMethod.lower() == "pca":
         imageLatents = computePca(locationImageData, kGiven)
-        print("PCA Latests ", np.array(imageLatents).shape)
+        print("PCA Latents ", np.array(imageLatents))
         index = imageIds.index(imgID)
         inputImageVector = imageLatents[index]
         for row in range(0, np.size(imageLatents,0)):
@@ -232,7 +208,8 @@ def main():
         print(*simScoresLoc[:5], sep = "\n")
 
     elif decompositionMethod.lower() == "lda":
-        imageLatents = getLocationDataForLDA(np.array(locationImageData))
+        imageLatents = getLocationDataForLDA(np.array(locationImageData) , kGiven)
+        print(imageLatents)
         index = imageIds.index(imgID)
         inputImageVector = imageLatents[index]
         for row in range(0, np.size(imageLatents,0)):
