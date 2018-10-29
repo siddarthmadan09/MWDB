@@ -15,12 +15,17 @@ from scipy.sparse import csr_matrix
 from numpy.linalg import svd
 from collections import defaultdict
 from xml.dom.minidom import parse
+from scipy.sparse import lil_matrix
+import gensim,lda
 import xml.dom.minidom
 import pandas as pd
 from sklearn.cluster import KMeans
 from datetime import datetime
+from sklearn.preprocessing import MinMaxScaler
+
+
 # Open XML document using minidom parser
-DOMTree = xml.dom.minidom.parse(r"C:/Users/vagarw14/mwdb3/devset_topics.xml")
+DOMTree = xml.dom.minidom.parse(r"/Users/sidmadan/Documents/mwdb/materials/DevSet/devset_topics.xml")
 collection = DOMTree.documentElement
 locationImageData = []     # A list to store all images data vectors for all locations
 location_name_dict = {}    
@@ -81,13 +86,13 @@ def clusterData(X):
     kmeans = KMeans(n_clusters=5, random_state=0).fit(X)
     return kmeans.cluster_centers_
 
-def getImagedataByLoc(locationId, model):         
+def getImagedataByLoc(locationId, model, cluster):
     arr=[]
     filenameX = location_name_dict[locationId] + ' ' + str(model)
     locationX=[]
     # print(filenameX)
     # CODE TO READ CSV LOCATION_MODEL FILE FOR LOCATION GIVEN
-    with open("C:/Users/vagarw14/mwdb3/descvis/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
+    with open("/Users/sidmadan/Documents/mwdb/materials/DevSet/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
         
         line = fp.readline()
         while line:
@@ -98,11 +103,15 @@ def getImagedataByLoc(locationId, model):
 
             locationX.append(arr[1:])
             line = fp.readline()
-    clusteredData = clusterData(locationX)        
-    for row in clusteredData:                       
-        representativeLocations.append(row)
-    
-    return representativeLocations
+    if(bool(cluster)):
+        clusteredData = clusterData(locationX)
+        for row in clusteredData:
+            representativeLocations.append(row)
+
+    if(bool(cluster)):
+        return representativeLocations
+    else:
+        return locationX
     
 def getOneLocationVec(locationId, model,inputImageID,inputLocNumber):         
     arr=[]
@@ -110,7 +119,7 @@ def getOneLocationVec(locationId, model,inputImageID,inputLocNumber):
     filenameX = location_name_dict[locationId] + ' ' + str(model)
     # print(filenameX)
     # CODE TO READ CSV LOCATION_MODEL FILE FOR LOCATION GIVEN
-    with open("C:/Users/vagarw14/mwdb3/descvis/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
+    with open("/Users/sidmadan/Documents/mwdb/materials/DevSet/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
         
         line = fp.readline()
         while line:
@@ -155,31 +164,66 @@ def computePca(X,k):
     Vt = Vt[:k,:]
     return np.dot(np_X, np.transpose(Vt))
 
+def lda_reduction(dataArray, k):
+    sparseDataArray = lil_matrix(dataArray)
+
+    model = lda.LDA(n_topics=k, n_iter=2)
+    model.fit(sparseDataArray)  # model.fit_transform(X) is also available
+    topic_word = model.topic_word_  # model.components_ also works
+    doc_topic = model.doc_topic_
+    latent = np.dot(dataArray,np.transpose(topic_word))
+    return latent
+
 def findInputLocLatents(X,inputLocNumber):
     Y=[]
     for i in range(0,5):
         Y.append(X[i + (inputLocNumber-1)*5])
-    return Y    
-        
+    return Y
+
+def getLocationDataForLDA(locationImageValues , k):
+    np_locationImageValues = np.asarray(locationImageValues)
+    scaler = MinMaxScaler()
+    scaler.fit(np_locationImageValues)
+    np_locationImageValues = scaler.transform(np_locationImageValues) * 1000
+
+    rows, columns = np_locationImageValues.shape
+
+    for i in range(rows):
+        for j in range(columns):
+            np_locationImageValues[i][j] = round(np_locationImageValues[i][j])
+
+    np_locationImageValues = np_locationImageValues.astype(int)
+    return lda_reduction(np_locationImageValues, k)
+
 def main():
-#    readInput()
-    inputLocNumber, model, decompositionMethod, kbest = readInputLocation()
+
+    #inputLocNumber, model, decompositionMethod, kbest = readInputLocation()
+
+    inputLocNumber = 2
+    model = "GLRLM3x3"
+    decompositionMethod = "LDA"
+    kbest = 5
+
     startTime = datetime.now()
     inputLocLatents = []
     location_name_dict = getLocationNames()
+    representativeLocation = getImagedataByLoc(3, model, cluster=False)
     for locationId in location_name_dict.keys() :
-        representativeLocations = getImagedataByLoc(locationId, model)
+        representativeLocations = getImagedataByLoc(locationId, model, cluster=True)
         
     print(np.array(representativeLocations).shape)
-    
-    if decompositionMethod == "SVD":
+
+    if decompositionMethod.lower() == "SVD":
+        locationLatents = computeSvd(list(representativeLocation),kbest);
+        print("SVD Latests ",np.array(locationLatents))
+
         locationLatents = computeSvd(list(representativeLocations),kbest);
-        print("SVD Latests ",np.array(locationLatents).shape)
-    
-        inputLocLatents = perloc(locationLatents,inputLocNumber)
-       
+
+        inputLocLatents = findInputLocLatents(locationLatents,inputLocNumber)
+
+
         ImgDist={}
-        
+
         for loc_no in range(1,31):
             LocLatent = findInputLocLatents(locationLatents,loc_no)
             for i, v1 in enumerate(inputLocLatents):
@@ -187,17 +231,18 @@ def main():
                 min_dist = float("inf")
                 for j, v2 in enumerate(LocLatent):
                     min_dist = min(min_dist, findSimiliarityDist(v1,v2))
-                interClusDist.append(min_dist)                    
+                interClusDist.append(min_dist)
             ImgDist[location_name_dict[loc_no]] = statistics.mean(interClusDist)
-    
-        ImgDist  = sorted(ImgDist.items(), key=operator.itemgetter(1))            
+
+        ImgDist  = sorted(ImgDist.items(), key=operator.itemgetter(1))
         print(*ImgDist[:5], sep = "\n")
         
-    elif decompositionMethod == "PCA":
+    elif decompositionMethod.lower() == "PCA":
+        locationLatents = computePca(list(representativeLocation),kbest);
+        print("PCA Latests ",np.array(locationLatents))
+
         locationLatents = computePca(list(representativeLocations),kbest);
-        print("PCA Latests ",np.array(locationLatents).shape)
-    
-        inputLocLatents = perloc(locationLatents,inputLocNumber)
+        inputLocLatents = findInputLocLatents(locationLatents,inputLocNumber)
        
         ImgDist={}
         
@@ -213,7 +258,28 @@ def main():
     
         ImgDist  = sorted(ImgDist.items(), key=operator.itemgetter(1))            
         print(*ImgDist[:5], sep = "\n")
-        
+
+    elif decompositionMethod.lower() == "lda":
+        locationLatent = getLocationDataForLDA(representativeLocation,kbest);
+        print("LDA Latents ",np.array(locationLatent))
+
+        locationLatents = getLocationDataForLDA(representativeLocations,kbest);
+        inputLocLatents = findInputLocLatents(locationLatents,inputLocNumber)
+
+        ImgDist={}
+
+        for loc_no in range(1,31):
+            LocLatent = findInputLocLatents(locationLatents,loc_no)
+            for i, v1 in enumerate(inputLocLatents):
+                interClusDist =[]
+                min_dist = float("inf")
+                for j, v2 in enumerate(LocLatent):
+                    min_dist = min(min_dist, findSimiliarityDist(v1,v2))
+                interClusDist.append(min_dist)
+            ImgDist[location_name_dict[loc_no]] = statistics.mean(interClusDist)
+
+        ImgDist  = sorted(ImgDist.items(), key=operator.itemgetter(1))
+        print(*ImgDist[:5], sep = "\n")
     else:
         print ("Invalid decomposition method")
         sys.exit(0) 

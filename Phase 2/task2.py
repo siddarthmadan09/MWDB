@@ -25,7 +25,11 @@ if len(sys.argv) == 5:
     if dataType == "location":
         dataId = getLocationNameFromId(dataId)
 
-    dataArray, docs, terms = task1_2_base.computeDataArray(dataFamily=dataType)
+    if dataType == "image":
+        devsetDirectoryPath = open('devset_directory_path.config', 'r').read()
+        dataArray, docs, terms = task1_2_base.computeImageTermArray(devsetDirectoryPath + '/devset/desctxt/devset_textTermsPerImage.csv')
+    else:
+        dataArray, docs, terms = task1_2_base.computeDataArray(dataFamily=dataType)
 
     if decompositionMethod == "svd":
         objectLatentPairs = task1_2_base.svd_reduction(dataArray, k, "object-latent")
