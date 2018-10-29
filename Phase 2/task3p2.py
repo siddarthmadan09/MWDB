@@ -3,6 +3,7 @@ import csv
 import sys
 import numpy as np
 import operator
+import statistics
 from scipy.sparse import csr_matrix
 from numpy.linalg import svd
 from collections import defaultdict
@@ -15,9 +16,16 @@ from sklearn.decomposition import PCA
 from numpy import linalg
 from datetime import datetime
 import pandas as pd
+from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
+import csv
+import sys
+from sys import argv
+
+import os
+
 # Open XML document using minidom parser
-DOMTree = xml.dom.minidom.parse(r"/Users/sidmadan/Documents/mwdb/materials/DevSet/devset_topics.xml")
+DOMTree = xml.dom.minidom.parse(r"./data/devset_topics.xml")
 collection = DOMTree.documentElement
 locationImageData = []     # A list to store all images data vectors for all locations
 location_name_dict = {}    
@@ -25,6 +33,7 @@ imageIds=[]            # A list of all image IDS for all locations
 imageScores = {}
 simScoresLoc = {}
 reducedLocations = []
+representativeLocations = []
 AllRowsPerLoc =[0]
 # CODE TO GET FILENAME OF ALL  LOCATION FILES
 
@@ -35,12 +44,25 @@ def getLocationNames():
         location_name_dict[int(topic.getElementsByTagName('number')[0].childNodes[0].data)] = topic.getElementsByTagName('title')[0].childNodes[0].data
     return location_name_dict
 
-# RIGHT NOW LOCATION ID IS CONVERTED TO INT inside dictionary
+# compute similarity distance measure between given input img id and other images and store the scores for the compared img.
 def findSimiliarityDist(inputImageVector, currentImageVector, currentImageID):
-    dist = sum([(a - b)** 2 for a, b in zip(inputImageVector, currentImageVector)])**(1/2)
+    dist = sum([(a - b)**2 for a, b in zip(inputImageVector, currentImageVector)])**(1/2)
 
     imageScores[int(currentImageID)] = dist
     return imageScores
+
+def findSimiliarityDist1(inputVector, currentVector):
+    dist = sum([(a - b)** 2 for a, b in zip(inputVector, currentVector)])**(1/2)
+    return dist
+
+def readInputs():
+    loc_number= int(argv[1])
+    model = argv[2]
+    decompositionMethod = argv[3]
+    model = model.upper()
+    decompositionMethod = decompositionMethod.upper()
+    kbest = int(argv[4])
+    return loc_number,model,decompositionMethod,kbest
 
 def getInputLocVector(X, inputLocNumber):
     inputLocVector = X[inputLocNumber-1]
@@ -51,34 +73,21 @@ def calculateSimscores(reducedLocations,inputLocVector):
     for idx in range(0,len(reducedLocations)):
         dist = sum([(a - b)**2  for a, b in zip(inputLocVector, reducedLocations[idx])])**(1/2)
         simScoresLoc[location_name_dict[idx+1]] = dist
-    return simScoresLoc               
+    return simScoresLoc
     
-def readInputLocation():
-    loc_number= int(input('Enter location_number\n'))
-    model = input('Enter the model of preference\n')
-    decompositionMethod = input('Enter the Method of decomposition\n')
-    model = model.upper()
-    decompositionMethod = decompositionMethod.upper()
-    kbest = int(input('K \n'))
-    return loc_number,model,decompositionMethod,kbest
-
-def readInputs():
-    img_id = int(input('Enter image id:\n'))
-    model = input('Enter the model of preference\n')
-    decompositionMethod = input('Enter the Method of decomposition\n')
-    model = model.upper()
-    decompositionMethod = decompositionMethod.upper()
-    kbest = int(input('K \n'))
-    return img_id,model,decompositionMethod,kbest 
-    
+def findInputLocLatents(X,inputLocNumber):
+    Y=[]
+    for i in range(0,5):
+        Y.append(X[i + (inputLocNumber-1)*5])
+    return Y
 
 # retrieve all the image data given location and color model
-def getImagedataByLoc(locationId, model,inputImageID,inputLocNumber):         
+def getImagedataByLoc(locationId, model,inputImageID,inputLocNumber):
     arr=[]
     filenameX = location_name_dict[locationId] + ' ' + str(model)
 
 
-    with open("/Users/sidmadan/Documents/mwdb/materials/DevSet/descvis/img/"+filenameX+".csv","rt",newline='', encoding="utf8") as fp:
+    with open("./data/img/"+filenameX+".csv","rt", encoding="utf8") as fp:
         
         line = fp.readline()
         while line:
@@ -92,6 +101,30 @@ def getImagedataByLoc(locationId, model,inputImageID,inputLocNumber):
             line = fp.readline()
     AllRowsPerLoc.append(len(imageIds))
     return inputLocNumber
+
+def populateLocationData(locationId, model):
+    arr=[]
+    filenameX = location_name_dict[locationId] + ' ' + str(model)
+    locationX=[]
+    # print(filenameX)
+    # CODE TO READ CSV LOCATION_MODEL FILE FOR LOCATION GIVEN
+    with open("./data/img/"+filenameX+".csv","rt", encoding="utf8") as fp:
+
+        line = fp.readline()
+        while line:
+            #arr = list(line.split(","))
+            arr = line.split(",")
+            arr[-1] = arr[-1][:-1]   # ALL IMAGE DATA WITHOUT IMAGE IDS
+            arr= [round(float(x),3) for x in arr]
+
+            locationX.append(arr[1:])
+            line = fp.readline()
+        clusteredData = clusterData(locationX)
+        for row in clusteredData:
+            representativeLocations.append(row)
+
+
+        return representativeLocations
 
 # get the number of objects present in each location.
 def getRowsperLoc():
@@ -114,7 +147,11 @@ def computeSvd(X,k):
     U, s, Vt = svd(X,full_matrices=False)
     Vt = Vt[:k,:]
     return np.dot(np_X, np.transpose(Vt))
-                         
+
+def clusterData(X):
+    kmeans = KMeans(n_clusters=5, random_state=0).fit(X)
+    return kmeans.cluster_centers_
+
 def computePca(X,k):
     np_X = np.asarray(X, dtype = float)
     covmatrix = np.cov(np.transpose(np_X))
@@ -148,12 +185,7 @@ def getLocationDataForLDA(locationImageValues , k):
     return lda_reduction(np_locationImageValues, k)
 
 def main():
-    # imgID,model,decompositionMethod,kGiven = readInputs()
-
-    imgID = 1288780397
-    model = "GLRLM3x3"
-    decompositionMethod = "LDA"
-    kGiven = 5
+    imgID,model,decompositionMethod,kGiven = readInputs()
 
     startTime = datetime.now()
     inputLocNumber = -1
@@ -165,7 +197,12 @@ def main():
 
     if decompositionMethod.lower() == "svd":
         imageLatents = computeSvd(locationImageData, kGiven)
-        print("SVD Latents ", np.array(imageLatents).shape)
+
+        print("LS matrix calulated")
+        dataframe = pd.DataFrame(data=imageLatents.astype(float))
+        dataframe.to_csv('outfile_'+sys.argv[3].upper()+"_"+str(datetime.now())+'.csv', sep=' ', header=False, float_format='%.2f', index=False)
+        print("file save done")
+
         index = imageIds.index(imgID)
         inputImageVector = imageLatents[index]
         for row in range(0, np.size(imageLatents,0)):
@@ -178,16 +215,35 @@ def main():
 
         print("*" * 30)  # STARTING Comparison of Locations
 
-        RowsPerLoc = getRowsperLoc()
-        getLocationLatents(imageLatents,RowsPerLoc)
-        inputLocVector =  getInputLocVector(reducedLocations,inputLocNumber)
-        simScoresLoc = calculateSimscores(reducedLocations,inputLocVector)
-        simScoresLoc  = sorted(simScoresLoc.items(), key=operator.itemgetter(1))
-        print(*simScoresLoc[:5], sep = "\n")
+        for locationId in location_name_dict.keys() :
+            representativeLocations = populateLocationData(locationId, model)
+
+        locationLatents = computePca(list(representativeLocations),kGiven)
+        inputLocLatents = findInputLocLatents(locationLatents,inputLocNumber)
+
+        ImgDist={}
+
+        for loc_no in range(1,31):
+            LocLatent = findInputLocLatents(locationLatents,loc_no)
+            for i, v1 in enumerate(inputLocLatents):
+                interClusDist =[]
+                min_dist = float("inf")
+                for j, v2 in enumerate(LocLatent):
+                    min_dist = min(min_dist, findSimiliarityDist1(v1,v2))
+                interClusDist.append(min_dist)
+            ImgDist[location_name_dict[loc_no]] = statistics.mean(interClusDist)
+
+        ImgDist  = sorted(ImgDist.items(), key=operator.itemgetter(1))
+        print(*ImgDist[:5], sep = "\n")
 
     elif decompositionMethod.lower() == "pca":
         imageLatents = computePca(locationImageData, kGiven)
-        print("PCA Latents ", np.array(imageLatents))
+
+        print("LS matrix calulated")
+        dataframe = pd.DataFrame(data=imageLatents.astype(float))
+        dataframe.to_csv('outfile_'+sys.argv[3].upper()+"_"+str(datetime.now())+'.csv', sep=' ', header=False, float_format='%.2f', index=False)
+        print("file save done")
+
         index = imageIds.index(imgID)
         inputImageVector = imageLatents[index]
         for row in range(0, np.size(imageLatents,0)):
@@ -200,16 +256,35 @@ def main():
 
         print("*" * 30)  # STARTING Comparison of Locations
 
-        RowsPerLoc = getRowsperLoc()
-        getLocationLatents(imageLatents,RowsPerLoc)
-        inputLocVector =  getInputLocVector(reducedLocations,inputLocNumber)
-        simScoresLoc = calculateSimscores(reducedLocations,inputLocVector)
-        simScoresLoc  = sorted(simScoresLoc.items(), key=operator.itemgetter(1))
-        print(*simScoresLoc[:5], sep = "\n")
+        for locationId in location_name_dict.keys() :
+            representativeLocations = populateLocationData(locationId, model)
+
+        locationLatents = computePca(list(representativeLocations),kGiven)
+        inputLocLatents = findInputLocLatents(locationLatents,inputLocNumber)
+
+        ImgDist={}
+
+        for loc_no in range(1,31):
+            LocLatent = findInputLocLatents(locationLatents,loc_no)
+            for i, v1 in enumerate(inputLocLatents):
+                interClusDist =[]
+                min_dist = float("inf")
+                for j, v2 in enumerate(LocLatent):
+                    min_dist = min(min_dist, findSimiliarityDist1(v1,v2))
+                interClusDist.append(min_dist)
+            ImgDist[location_name_dict[loc_no]] = statistics.mean(interClusDist)
+
+        ImgDist  = sorted(ImgDist.items(), key=operator.itemgetter(1))
+        print(*ImgDist[:5], sep = "\n")
 
     elif decompositionMethod.lower() == "lda":
         imageLatents = getLocationDataForLDA(np.array(locationImageData) , kGiven)
-        print(imageLatents)
+
+        print("LS matrix calulated")
+        dataframe = pd.DataFrame(data=imageLatents.astype(float))
+        dataframe.to_csv('outfile_'+sys.argv[3].upper()+"_"+str(datetime.now())+'.csv', sep=' ', header=False, float_format='%.2f', index=False)
+        print("file save done")
+
         index = imageIds.index(imgID)
         inputImageVector = imageLatents[index]
         for row in range(0, np.size(imageLatents,0)):
@@ -222,12 +297,26 @@ def main():
 
         print("*" * 30)  # STARTING Comparison of Locations
 
-        RowsPerLoc = getRowsperLoc()
-        getLocationLatents(imageLatents,RowsPerLoc)
-        inputLocVector =  getInputLocVector(reducedLocations,inputLocNumber)
-        simScoresLoc = calculateSimscores(reducedLocations,inputLocVector)
-        simScoresLoc  = sorted(simScoresLoc.items(), key=operator.itemgetter(1))
-        print(*simScoresLoc[:5], sep = "\n")
+        for locationId in location_name_dict.keys() :
+            representativeLocations = populateLocationData(locationId, model)
+
+        locationLatents = computePca(list(representativeLocations),kGiven)
+        inputLocLatents = findInputLocLatents(locationLatents,inputLocNumber)
+
+        ImgDist={}
+
+        for loc_no in range(1,31):
+            LocLatent = findInputLocLatents(locationLatents,loc_no)
+            for i, v1 in enumerate(inputLocLatents):
+                interClusDist =[]
+                min_dist = float("inf")
+                for j, v2 in enumerate(LocLatent):
+                    min_dist = min(min_dist, findSimiliarityDist1(v1,v2))
+                interClusDist.append(min_dist)
+            ImgDist[location_name_dict[loc_no]] = statistics.mean(interClusDist)
+
+        ImgDist  = sorted(ImgDist.items(), key=operator.itemgetter(1))
+        print(*ImgDist[:5], sep = "\n")
     else:
         print ("Invalid decomposition method")
         sys.exit(0) 
