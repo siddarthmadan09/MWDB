@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 24 20:19:53 2018
-
-@author: vagarw14
-"""
-# -*- coding: utf-8 -*-
 
 import csv
 import sys
