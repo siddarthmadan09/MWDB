@@ -40,7 +40,7 @@ def getCSVDataAsListData(fileName):
 def computeImageTermArray(fileName):
     client = MongoClient('localhost', 27017)
     db = client['dev_data']
-    collection = db.descUser
+    collection = db.descImage
     AllTerms = collection.distinct("terms.term")
     AllImages = collection.distinct("imageId")
     UserTermArr = []
