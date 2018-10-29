@@ -282,5 +282,5 @@ for i in mostSimilarIndexes:
 # print "OBJECT MATRIX"
 # print objectLSMatrix
 
-print "\n Total Time taken to Execute"
-print str(datetime.datetime.now()-startTime)
+print ("\n Total Time taken to Execute")
+print (str(datetime.datetime.now()-startTime))
