@@ -79,13 +79,15 @@ for idx,location in enumerate(locationFileData):
             commonTermsArray = set(userTerms) & set(imageTerms) & set(locationTerms)#finding intersection between userterms, imageterms and locationterms
             originalDataTensor[idx][idy][idz] = len(commonTermsArray)#appending the count of similar terms into the 3D matrix
 
-npArr = np.asarray(originalDataTensor)#conversion of 3D matrix to a numpy 3D matrrix because tensor creation can only be possible with a numpy matrix
-tensor = tl.tensor(npArr)
+tensor = tl.tensor(originalDataTensor)
 while (k!=0):
     factormatrix = parafac(tensor,rank=k)#CP Decomposition. Here The array : factormatrix has 2 sub-arrays. Each containing one factor matrix for users, images and terms
     for i in range(0,3):
-        print("============",i,"Factor Matrix","==============")
-        print(factormatrix[i])
+        kmeans = KMeans(n_clusters=k, random_state=0).fit(factormatrix[i])
+        matrixToUse = kmeans.cluster_centers_
+        print("============",i,"Clustered Factor Matrix","==============")
+        print(matrixToUse)
+    
     print("If you wish to input another query, enter value of K else enter 0 to exit")
     k = int(input())
     
