@@ -12,12 +12,12 @@ import gensim
 startTime = datetime.now()
 #create mongo connection
 client = MongoClient('localhost', 27017)
-db = client['projectmwdb']
+db = client['dev_data']
 #fetch locations
-locations = db.devset_textTermsPerPOI.find()
+locations = db.descLocation.find()
 locarr = []
 #fetch all distinct terms present
-all_terms = db.devset_textTermsPerPOI.distinct("terms.Term")
+all_terms = db.descLocation.distinct("terms.Term")
 locationTermArray = []
 
 npLTArray = np.array([]);
@@ -33,7 +33,7 @@ def form_matrix(descriptor):
         termArr = location["terms"]
         tempArr= np.full((55180), 0)
         for term in termArr:
-            index = all_terms.index(term['Term'])
+            index = all_terms.index(term['term'])
             tempArr[index] = term[descriptor]
         locationTermArray.append(tempArr)
     npLTArray = np.array(locationTermArray)
@@ -51,7 +51,7 @@ def writeoutput(line):
                  
 def main():
     global npLTTransposeArray,LLSMatrix,LFMatrix
-    form_matrix('TF-IDF')
+    form_matrix('tf-idf')
     npLTTransposeArray = npLTArray.transpose()
     # Perform d * d transpose to obtain location location similarity matrix
     LLSMatrix = np.matmul(npLTArray,npLTTransposeArray)
