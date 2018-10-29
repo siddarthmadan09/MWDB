@@ -83,7 +83,7 @@ tensor = tl.tensor(originalDataTensor)
 while (k!=0):
     factormatrix = parafac(tensor,rank=k)#CP Decomposition. Here The array : factormatrix has 2 sub-arrays. Each containing one factor matrix for users, images and terms
     for i in range(0,3):
-        kmeans = KMeans(n_clusters=k, random_state=0).fit(factormatrix[i])
+        kmeans = KMeans(n_clusters=k, random_state=0).fit(factormatrix[i])#using k-means clustering to reduce overlapping amongst each factor matrix
         matrixToUse = kmeans.cluster_centers_
         print("============",i,"Clustered Factor Matrix","==============")
         print(matrixToUse)
