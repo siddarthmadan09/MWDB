@@ -1,0 +1,52 @@
+User - 23260223@N04, k = 5
+SVD:
+============ Most Similar 5 Data Ids ==============
+1 23260223@N04 | Score =  0.0
+2 34507951@N07 | Score =  1.1791351491192859
+3 10684196@N04 | Score =  1.652287700029512
+4 86048711@N00 | Score =  1.749085494273929
+5 30863942@N00 | Score =  1.8814393788202461
+
+PCA:
+============ Most Similar 5 Data Ids ==============
+1 23260223@N04 | Score =  0.0
+2 34507951@N07 | Score =  0.054710994814959536
+3 10684196@N04 | Score =  0.06496586985304192
+4 30863942@N00 | Score =  0.07026863771410388
+5 69185478@N00 | Score =  0.08643281052323265
+
+LDA:
+============ Most Similar 5 Data Ids ==============
+1 23260223@N04 | Score =  0.0
+2 96437548@N00 | Score =  0.20107962231263796
+3 66208256@N00 | Score =  0.25015916311259717
+4 12289625@N04 | Score =  0.2833167863172108
+5 77739593@N00 | Score =  0.3065596223064532
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Location - 10, k = 5
+SVD:
+============ Most Similar 5 Data Ids ==============
+1 agra_fort | Score =  0.0
+2 ara_pacis | Score =  29.39531630554862
+3 bok_tower_gardens | Score =  41.2478703850221
+4 hearst_castle | Score =  49.15997487488711
+5 cn_tower | Score =  92.63099007391223
+
+PCA:
+============ Most Similar 5 Data Ids ==============
+1 agra_fort | Score =  0.0
+2 ara_pacis | Score =  2.372424486440444
+3 bok_tower_gardens | Score =  2.8362689782677055
+4 hearst_castle | Score =  4.2040925930719615
+5 cn_tower | Score =  8.0328074894254
+
+LDA:
+============ Most Similar 5 Data Ids ==============
+1 agra_fort | Score =  0.0
+2 colosseum | Score =  8.713848052842897
+3 big_ben | Score =  9.944906941910398
+4 civic_center_san_francisco | Score =  14.577206888799983
+5 cologne_cathedral | Score =  15.268166398492165

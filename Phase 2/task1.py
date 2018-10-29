@@ -43,6 +43,6 @@ else:
     sys.exit(0)
 
 dataframe = pd.DataFrame(data=termWeightPairs.astype(float))
-dataframe.to_csv('outfile_'+ dataType + '_' + decompositionMethod +'.csv', sep=' ', header=False, float_format='%.2f', index=False)
+dataframe.to_csv('outfile_'+ dataType + '_' + decompositionMethod + '_' + str(k) +'.csv', sep=' ', header=False, float_format='%.2f', index=False)
 
 print ("Total time taken: ", datetime.now() - startTime)
