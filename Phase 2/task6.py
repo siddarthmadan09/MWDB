@@ -44,7 +44,11 @@ def performSVD():
     U, s, VT = svd(LLSMatrix)
     U = U[:,:k]
     LFMatrix = np.matmul(LLSMatrix,U)
-    
+
+def writeoutput(line):
+    with open('./output_6.txt', 'a') as output_file:
+        output_file.write(line+'\n')
+                 
 def main():
     global npLTTransposeArray,LLSMatrix,LFMatrix
     form_matrix('TF-IDF')
@@ -62,11 +66,11 @@ def main():
         sortarr = np.sort(row)
         sortarg = np.argsort(row)
         count = sortarr.shape
-        print ("------------------------")
-        print ("Latent Symantic "+str(index))
+        writeoutput ("------------------------")
+        writeoutput ("Latent Symantic "+str(index))
         #display locations for each symatic in deacreasing order of weights
         for i in range(count[0]):
-            print("location:"+locarr[sortarg[count[0]-i-1]]['id']+" Weight: "+ str(sortarr[count[0]-i-1]))
+            writeoutput("location:"+locarr[sortarg[count[0]-i-1]]['id']+" Weight: "+ str(sortarr[count[0]-i-1]))
         index += 1
         
     
