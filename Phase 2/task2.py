@@ -43,7 +43,7 @@ if len(sys.argv) == 5:
         documentTopic = task1_2_base.lda_reduction(dataArray, k, "object-latent")
         #task1_2_base.euclideansimilarity(documentTopic, docs, terms, dataId)
         #task1_2_base.calculateSimilarityScoreUsingCosine(documentTopic, docs, dataId)
-        task1_2_base.calculateSimilarityScoreUsingL1(documentTopic, docs, dataId)
+        task1_2_base.euclideansimilarity(documentTopic, docs, terms, dataId)
         # print (documentTopic[0])
         # for i in range(10):
         #     print("{} (top topic: {})".format(docs[i], documentTopic[i].argmax()))

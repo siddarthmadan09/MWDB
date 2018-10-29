@@ -123,6 +123,7 @@ def pca_reduction(dataArray, k, get="feature-latent"):
 
 
 def lda_reduction(dataArray, k, get="feature-latent"):
+    #print  ("dataArray", dataArray.shape)
     sparseDataArray = lil_matrix(dataArray)
 
     model = lda.LDA(n_topics=k, n_iter=200)
@@ -133,9 +134,12 @@ def lda_reduction(dataArray, k, get="feature-latent"):
     # print ("dpc_topic", doc_topic.shape)
 
     if get == "feature-latent":
-        return topic_word
+        #print ("topic_word:", topic_word.shape)
+        #print ("doc_topic:", doc_topic.shape)
+        #return topic_word
+        return np.matmul(dataArray.transpose(), doc_topic)
     else:
-        return doc_topic
+        return np.matmul(dataArray, topic_word.transpose())
 
 
 def euclideansimilarity(objlatentpairs,docs,terms,dataId):
