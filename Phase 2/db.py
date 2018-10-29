@@ -40,6 +40,10 @@ def addToDB(document, fileData):
 
 client = MongoClient()
 db = client['dev_data']
+<<<<<<< Updated upstream:Phase 2/db.py
+=======
+#devsetDirectoryPath = open('devset_directory_path.config', 'r').read()
+>>>>>>> Stashed changes:DB Scripts/db.py
 
 filename = "./data/devset_textTermsPerUser.txt"
 fileData = open(filename, "r").read()
@@ -54,7 +58,11 @@ dataToSave = addToDB('image', fileData)
 db.descImage.insert_many(dataToSave)
 
 filename = "./data/devset_textTermsPerPOI.txt"
+<<<<<<< Updated upstream:Phase 2/db.py
 fileData = open( filename, "r").read()
+=======
+fileData = open(filename, "r").read()
+>>>>>>> Stashed changes:DB Scripts/db.py
 fileData = fileData.split('\n')
 dataToSave = addToDB('location', fileData)
 db.descLocation.insert_many(dataToSave)

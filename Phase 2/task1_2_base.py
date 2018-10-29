@@ -6,7 +6,7 @@ from scipy.sparse import lil_matrix, csc_matrix
 from sklearn.decomposition import TruncatedSVD
 from sklearn.decomposition import PCA
 from numpy import linalg
-import gensim, lda
+import lda
 from sparsesvd import sparsesvd
 import pandas as pd
 from scipy import spatial
@@ -38,18 +38,27 @@ def getCSVDataAsListData(fileName):
         return mainData
 
 def computeImageTermArray(fileName):
-    client = MongoClient('localhost', 27017)
-    db = client['dev_data']
-    collection = db.descImage
-    AllTerms = collection.distinct("terms.term")
-    AllImages = collection.distinct("imageId")
-    UserTermArr = []
+    #client = MongoClient('localhost', 27017)
+    #db = client['dev_data']
+    #collection = db.descImage
+    #AllTerms = collection.distinct("terms.term")
+    #AllImages = collection.distinct("imageId")
 
     data = getCSVDataAsListData(fileName)
+
+    AllTerms = []
+    for row in data:
+        termArr = returnUserTerms(row)
+        for val in termArr:
+            if not val in AllTerms:
+                AllTerms.append(val);
+    AllImages = []
+    UserTermArr = []
     for row in data:
         termArr = returnUserTerms(row)
         tfArr = returnUserTfValues(row)
         tempArr=[]
+        AllImages.append(row[0])
         for index in range(len(AllTerms)):
             if AllTerms[index] in termArr:
                 loc = termArr.index(AllTerms[index])

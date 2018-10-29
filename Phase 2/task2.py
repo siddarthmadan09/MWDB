@@ -7,8 +7,8 @@ startTime = datetime.now()
 ## input format: python task1 user/image/location svd/pca/lda k user/image/location_ID
 
 def getLocationNameFromId(locationId):
-    devsetDirectoryPath = open('devset_directory_path.config', 'r').read()
-    xmlData = xml.etree.ElementTree.parse(devsetDirectoryPath + '/devset/devset_topics.xml').getroot()
+    #devsetDirectoryPath = open('devset_directory_path.config', 'r').read()
+    xmlData = xml.etree.ElementTree.parse('./data/devset_topics.xml').getroot()
 
     #get location name from location ID
     for topic in xmlData.findall('topic'):
@@ -26,8 +26,8 @@ if len(sys.argv) == 5:
         dataId = getLocationNameFromId(dataId)
 
     if dataType == "image":
-        devsetDirectoryPath = open('devset_directory_path.config', 'r').read()
-        dataArray, docs, terms = task1_2_base.computeImageTermArray(devsetDirectoryPath + '/devset/desctxt/devset_textTermsPerImage.csv')
+        #devsetDirectoryPath = open('devset_directory_path.config', 'r').read()
+        dataArray, docs, terms = task1_2_base.computeImageTermArray('./data/devset_textTermsPerImage.csv')
     else:
         dataArray, docs, terms = task1_2_base.computeDataArray(dataFamily=dataType)
 
@@ -43,7 +43,7 @@ if len(sys.argv) == 5:
         documentTopic = task1_2_base.lda_reduction(dataArray, k, "object-latent")
         #task1_2_base.euclideansimilarity(documentTopic, docs, terms, dataId)
         #task1_2_base.calculateSimilarityScoreUsingCosine(documentTopic, docs, dataId)
-        task1_2_base.euclideansimilarity(documentTopic, docs, terms, dataId)
+        task1_2_base.calculateSimilarityScoreUsingL1(documentTopic, docs, dataId)
         # print (documentTopic[0])
         # for i in range(10):
         #     print("{} (top topic: {})".format(docs[i], documentTopic[i].argmax()))
@@ -55,4 +55,4 @@ else:
     print ("Invalid input")
     sys.exit(0)
 
-print ("Total time taken: ", datetime.now() - startTime)
+print ("Total time taken: ", str(datetime.now() - startTime))

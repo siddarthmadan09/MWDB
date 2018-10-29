@@ -16,8 +16,8 @@ if len(sys.argv) == 4:
     k = int(sys.argv[3])
 
     if dataType == "image":
-        devsetDirectoryPath = open('devset_directory_path.config', 'r').read()
-        dataArray, docs, terms = task1_2_base.computeImageTermArray(devsetDirectoryPath + '/devset/desctxt/devset_textTermsPerImage.csv')
+        #devsetDirectoryPath = open('devset_directory_path.config', 'r').read()
+        dataArray, docs, terms = task1_2_base.computeImageTermArray('./data/devset_textTermsPerImage.csv')
     else:
         dataArray, docs, terms = task1_2_base.computeDataArray(dataFamily=dataType)
 
