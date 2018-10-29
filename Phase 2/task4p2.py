@@ -229,7 +229,7 @@ def main():
         print(*ImgDist[:5], sep = "\n")
 
     elif decompositionMethod.lower() == "lda":
-        locationLatent = getLocationDataForLDA(representativeLocation,kbest);
+        locationLatents = getLocationDataForLDA(representativeLocation,kbest);
 
         print("LS matrix calulated")
         dataframe = pd.DataFrame(data=locationLatents.astype(float))

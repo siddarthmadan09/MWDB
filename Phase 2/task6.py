@@ -17,7 +17,7 @@ db = client['dev_data']
 locations = db.descLocation.find()
 locarr = []
 #fetch all distinct terms present
-all_terms = db.descLocation.distinct("terms.Term")
+all_terms = db.descLocation.distinct("terms.term")
 locationTermArray = []
 
 npLTArray = np.array([]);
@@ -70,7 +70,7 @@ def main():
         writeoutput ("Latent Symantic "+str(index))
         #display locations for each symatic in deacreasing order of weights
         for i in range(count[0]):
-            writeoutput("location:"+locarr[sortarg[count[0]-i-1]]['id']+" Weight: "+ str(sortarr[count[0]-i-1]))
+            writeoutput("location:"+locarr[sortarg[count[0]-i-1]]['locationName']+" Weight: "+ str(sortarr[count[0]-i-1]))
         index += 1
         
     
