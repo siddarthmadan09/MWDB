@@ -156,11 +156,6 @@ def main():
 
     inputLocNumber, model, decompositionMethod, kbest = readInputLocation()
 
-    # inputLocNumber = 2
-    # model = "GLRLM3x3"
-    # decompositionMethod = "PCa"
-    # kbest = 5
-
     startTime = datetime.now()
     inputLocLatents = []
     location_name_dict = getLocationNames()
