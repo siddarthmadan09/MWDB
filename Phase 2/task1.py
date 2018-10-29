@@ -1,12 +1,7 @@
 import sys
-from pymongo import MongoClient
 from datetime import datetime
 import numpy as np
-from scipy.sparse import lil_matrix
-from sklearn.decomposition import TruncatedSVD
-from sklearn.decomposition import PCA
-from numpy import linalg
-import lda
+import pandas as pd
 
 import task1_2_base
 
@@ -33,18 +28,21 @@ if len(sys.argv) == 4:
         termWeightPairs = task1_2_base.pca_reduction(dataArray, k)
         print (termWeightPairs)
     elif decompositionMethod == "lda":
-        topicWord = task1_2_base.lda_reduction(dataArray, k)
+        termWeightPairs = task1_2_base.lda_reduction(dataArray, k)
 
-        # for i, topic_dist in enumerate(topicWord):
+        # for i, topic_dist in enumerate(termWeightPairs):
         #     topic_words = np.array(terms)[np.argsort(topic_dist)][:-10:-1]
         #     print('Topic {}: {}'.format(i, ' '.join(topic_words)))
 
-        print (topicWord)
+        print (termWeightPairs)
     else:
         print ("Invalid decomposition method")
         sys.exit(0)
 else:
     print ("Invalid input")
     sys.exit(0)
+
+dataframe = pd.DataFrame(data=termWeightPairs.astype(float))
+dataframe.to_csv('outfile_'+ dataType +'.csv', sep=' ', header=False, float_format='%.2f', index=False)
 
 print ("Total time taken: ", datetime.now() - startTime)
