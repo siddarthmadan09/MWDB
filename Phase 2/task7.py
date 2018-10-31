@@ -56,9 +56,9 @@ def returnUserTermsForLocation(row):
     return tempTermArray
 
 k = int(sys.argv[1])
-userFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerUser.csv'
-locationFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerPOI.wFolderNames.csv'
-imageFileName = '/home/vivek/Documents/MWDB_Phase2/Phase 2/testdata/devset_textTermsPerImage.csv'
+userFileName = './data/devset_textTermsPerUser.csv'
+locationFileName = './data/devset_textTermsPerPOI.wFolderNames.csv'
+imageFileName = './data/devset_textTermsPerImage.csv'
 
 userFileData = getCSVDataAsListData(userFileName)#converting user csv file data into a list
 imageFileData = getCSVDataAsListData(imageFileName)#converting image csv file data into a list
