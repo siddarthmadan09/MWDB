@@ -14,6 +14,9 @@ from collections import Counter
 from sklearn.metrics.pairwise import cosine_similarity as cosineSimilarity
 from sklearn.metrics.pairwise import euclidean_distances as euclideanDistance
 from sklearn.metrics.pairwise import manhattan_distances as manhattanDistance
+
+import visualizeGraph
+
 def returnUserTerms(row):
     col_count = 1
     tempTermArray = []
@@ -128,6 +131,12 @@ def getKMostSimilarImagesAndScoresAsDict(scoreArr,k):
         tempDict[imageid] = scores[idx]
     return tempDict
 
+def convertKMostSimilarImagesAndScoresToDict(imageIDs, scores):
+    tempDict={}
+    for idx,imageid in enumerate(imageIDs):
+        tempDict[imageid] = scores[idx]
+    return tempDict
+
 def getAllSimilarImagesAndScoresAsDict(scoreArr):
     tempDict={}
     for idx,imageid in enumerate(imageIDList):
@@ -167,7 +176,7 @@ allImageData = getCSVDataAsListData(fileName)
 imageTermDict = getAllImagesTermDict(fileName)
 imageTFDict = getAllImagesTFDict(fileName)
 allImageIDs = list(imageTermDict.keys())
-count=0;
+count=0
 imageIDList=[]
 allUniqueTerms = getAllUniqueTerms(fileName)
 print("\nunique terms calculated")
@@ -188,14 +197,16 @@ print ("Total Time taken to Execute")
 print (str(datetime.datetime.now()-startTime))
 startTime = datetime.datetime.now()
 
-# similarityMatrix = euclideanDistance(imageTermMatrix)
-similarityMatrix = cosineSimilarity(imageTermMatrix)
+similarityMatrix = euclideanDistance(imageTermMatrix)
+#similarityMatrix = cosineSimilarity(imageTermMatrix)
 # similarityMatrix = manhattanDistance(imageTermMatrix)
+
 #gc.collect()
-print("\ncosine similarty done")
+print("\neuclidean similarty done")
 print ("Total Time taken to Execute")
 print (str(datetime.datetime.now()-startTime))
 startTime = datetime.datetime.now()
+
 # totalDict={}
 # for idx,row in enumerate(similarityMatrix):
 #     totalDict[imageIDList[idx]] = getAllSimilarImagesAndScoresAsDict(row)
@@ -211,6 +222,7 @@ startTime = datetime.datetime.now()
 # print ("Total Time taken to Execute")
 # print (str(datetime.datetime.now()-startTime))
 # startTime = datetime.datetime.now()
+
 outputDict={}
 G = nx.DiGraph()
 taskNumber = (int)(input("Enter task number = "))
@@ -222,11 +234,13 @@ while taskNumber>0:
         # G = nx.Graph()
 
         for idx,row in enumerate(similarityMatrix):
-            outputDict[imageIDList[idx]] = getKMostSimilarImagesAndScoresAsDict(row,k)
+            #outputDict[imageIDList[idx]] = getKMostSimilarImagesAndScoresAsDict(row,k)
             imageIDs,scoreIDs = getKMostSimilarImagesAndScores(row,k)
-            for idx,imageID in enumerate(imageIDs):
-                G.add_edge(imageIDList[idx], imageID, capacity=scoreIDs[idx])
-        printAndSaveGraphProperly(outputDict,"task1-output.csv")
+            outputDict[imageIDList[idx]] = convertKMostSimilarImagesAndScoresToDict(imageIDs, scoreIDs)
+            for idex,imageID in enumerate(imageIDs):
+                G.add_edge(imageIDList[idex], imageID, capacity=scoreIDs[idx])
+               
+        printAndSaveGraphProperly(outputDict,"task1-output-euc.csv")
 
         print ("\nTask 1 complete")
         print ("Total Time taken to Execute")
@@ -252,10 +266,10 @@ while taskNumber>0:
         #     A = A + B
         # print(listofclusters)
         clusterDict={}
-        # for centroid in listofclusters:
+        # for centroid in listofncosine
         #     tempDict = {}
-        #     clusterDict[centroid] = tempDict
-        # #creating clusters with the above points as centroids
+        #     clusterDict[centroncosine
+        # #creating clusters witncosine
         # for key in totalDict:
         #     minDistance = 999999999
         #     closestClusterCentroid = ""
@@ -271,7 +285,8 @@ while taskNumber>0:
         print("Task 3 code here")
 
     elif taskNumber == 4:
-        print("Task 4 code here")
+        #print("Task 4 code here")
+        visualizeGraph.drawGraph(G)
 
     elif taskNumber == 5:
         print("Task 5 code here")
