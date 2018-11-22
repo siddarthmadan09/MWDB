@@ -7,6 +7,7 @@ import random
 import os.path
 import xml.dom.minidom
 from sklearn.preprocessing import normalize
+import webbrowser
 import gc
 from fnmatch import fnmatch
 import glob
@@ -291,34 +292,57 @@ def createGraphFromClusterArr(clusterArr,clusterIDs) :
     for idx, val in enumerate(clusterArr):
         col = allImageIDs.index(clusterIDs[val])
         G.add_edge(clusterIDs[val], allImageIDs[idx], capacity=imageImageSparse[idx][col])
-
     print(" graph created")
     drawGraph(G)
 
 def copyFiles(filename,dirname) :
-
     for path, subdirs, files in os.walk("./data/images/"):
         for name in files:
             if (filename in name):
-                print("match")
-                shutil.copy(os.path.join(path, name), dirname)
+                #print("match")
+                #shutil.copy(os.path.join(path, name), dirname)
+                return os.path.join(path, name)
+
+def showImagesInWebPage(clusterDict):
+    print("\n Creating Web Page")
+    f = open('kmeansoutput.html', 'w')
+    message = """<html><head></head><body>"""
+    f.write(message)
+    # add html code here
+    content = """<table><tbody>"""
+    for key in clusterDict:
+        content = content + """<tr><td><H1>""" + key + """</H1></td></tr><tr>"""
+        for idx, image in enumerate(clusterDict[key]):
+            if not image == None and ".jpg" in image:
+                content = content + """<td><img src=\"""" + image + """\" height="100" width="100"></td>"""
+        content = content + """</tr>"""
+
+    content = content + """</tbody></table>"""
+    f.write(content)
+    f.write("""</body></html>""")
+    f.close()
+    filename = 'file:///Users/sumeetbhalla/PycharmProjects/mwdbphase3/' + 'kmeansoutput.html'
+    webbrowser.open_new_tab(filename)
+
 
 def splitImagesInClusters(clusterArr,clusterIDs) :
-    # tempDict={}
-    # for id in clusterIDs:
-    #     tempDict[id]=[]
-    #
-    # #clusterArr has values from 0 to c-1. so putting all similar values in buckets
-    # for idx,val in enumerate(clusterArr):
-    #     list(tempDict[clusterIDs[val]]).append(allImageIDs[idx])
-    #
-    # return tempDict;
-
     #create folders with cluster numbers
     for id in clusterIDs:
-        os.mkdir(id)
+        #os.mkdir(id)
+        clusterDict[id] = []
+
     for idx, val in enumerate(clusterArr):
-        copyFiles(allImageIDs[idx]+".jpg",clusterIDs[val])
+        clusterDict[clusterIDs[val]].append(copyFiles(allImageIDs[idx]+".jpg",clusterIDs[val]))
+        #copyFiles(allImageIDs[idx]+".jpg",clusterIDs[val])
+    #print(clusterDict)1
+
+    #printAndSaveGraphProperly(clusterDict,"KMeansDict.csv")
+    #pickling_on = open("kMeansDict.pickle", "wb")
+    #pickle.dump(clusterDict, pickling_on)
+    #pickling_on.close()
+
+    showImagesInWebPage(clusterDict)
+
 
 def trigger_k_means(c):
     current_centroids,clusterIDs = getRandomCentroids(c)
@@ -330,7 +354,7 @@ def trigger_k_means(c):
         current_centroids = compute_centroid(previous_centroids, assigned_clusters)
         counter = counter+1
         #potential_func_value = self.calculate_potential_function(current_centroids, assigned_clusters)
-        print(counter)
+        print("iteration "+counter)
     print("custers created")
     return assigned_clusters,clusterIDs
 
@@ -453,15 +477,20 @@ while taskNumber>0:
                 col = allImageIDs.index(key2)
                 imageImageSparse[idx][col] = tempDict[key2]
 
+        imageImageSparse = similarityMatrix
         allClustersArr,clusterIDs = trigger_k_means(c)
 
-        splitImagesInClusters(allClustersArr,clusterIDs)
+        print("\nK-Means clustering done")
+        print("Total Time taken to Execute")
+        print(str(datetime.datetime.now() - startTime))
+        startTime = datetime.datetime.now()
 
-        #clusterDict = createClusterDict(listofclusters)
-        #now find a random point inside the previously created  clusters and run the above algo again
-        # graph = imageImageSparse
-        # g = Graph(graph)
-        # g.minCut(0,len(allImageIDs)-1)
+        clusterDict={}
+        splitImagesInClusters(allClustersArr,clusterIDs)
+        print("\nCreating Output Dict and Showing web page done")
+        print("Total Time taken to Execute")
+        print(str(datetime.datetime.now() - startTime))
+        startTime = datetime.datetime.now()
 
     elif taskNumber == 3:
         print("Task 3 code here")
