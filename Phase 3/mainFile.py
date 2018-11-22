@@ -330,7 +330,7 @@ def splitImagesInClusters(clusterArr,clusterIDs) :
     for id in clusterIDs:
         #os.mkdir(id)
         clusterDict[id] = []
-
+    print("\n Creating Cluster Dict with Image Paths")
     for idx, val in enumerate(clusterArr):
         clusterDict[clusterIDs[val]].append(copyFiles(allImageIDs[idx]+".jpg",clusterIDs[val]))
         #copyFiles(allImageIDs[idx]+".jpg",clusterIDs[val])
@@ -354,7 +354,7 @@ def trigger_k_means(c):
         current_centroids = compute_centroid(previous_centroids, assigned_clusters)
         counter = counter+1
         #potential_func_value = self.calculate_potential_function(current_centroids, assigned_clusters)
-        print("iteration "+counter)
+        print("iteration "+str(counter))
     print("custers created")
     return assigned_clusters,clusterIDs
 
