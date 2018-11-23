@@ -210,7 +210,8 @@ def getKMostSimilarImagesAndScores(scoreArr,k):
 def getKMostSimilarImagesAndScoresAsDict(scoreArr,k):
     a = np.asarray(scoreArr)
     idx = np.argpartition(a, k)
-    imageIDs = allImageIDs[idx[:k]]
+    tmpArr = np.asarray(allImageIDs)
+    imageIDs = tmpArr[idx[:k]]
     scores = scoreArr[idx[:k]]
     tempDict={}
     for idx,imageid in enumerate(imageIDs):
