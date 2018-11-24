@@ -312,22 +312,22 @@ def showImagesInWebPage(clusterDict,webpagename,showClusterName):
     message = """<html><head></head><body>"""
     f.write(message)
     # add html code here
-    content = """<table><tbody>"""
+    content = """"""
     for idx,key in enumerate(clusterDict):
         if not showClusterName :
-            content = content + """<tr><td><H1>Cluster """ + str(idx) + """</H1></td></tr><tr>"""
+            content = content + """<h1>Cluster """ + str(idx) + """</h1><table><tbody><tr>"""
         else:
-            content = content + """<tr><td><H1>""" + str(key) + """</H1></td></tr><tr>"""
+            content = content + """<h1>""" + str(key) + """</h1><table><tbody><tr>"""
         for idx, image in enumerate(clusterDict[key]):
             if not image == None and ".jpg" in image:
                 content = content + """<td><img src=\"""" + image + """\" height="100" width="100"></td>"""
-        content = content + """</tr>"""
+        content = content + """</tr></tbody></table>"""
 
-    content = content + """</tbody></table>"""
+    content = content + """"""
     f.write(content)
     f.write("""</body></html>""")
     f.close()
-    filename = 'file:///Users/sumeetbhalla/PycharmProjects/mwdbphase3/' + webpagename
+    filename = 'file:///Users/student/MWDB/Phase%203/' + webpagename
     webbrowser.open_new_tab(filename)
 
 def splitImagesInClusters(clusterArr,clusterIDs) :
@@ -522,8 +522,35 @@ while taskNumber>0:
             print("\n Spectral Clustering Code Here")
 
     elif taskNumber == 3:
-        print("Task 3 code here")
-        print("\nTask 3:\n")
+        k = (int)(input("Enter value for k = "))
+        W = nx.stochastic_graph(G, weight='weight') 
+        N = W.number_of_nodes() 
+        # Choose fixed starting vector if not given 
+        x = dict.fromkeys(W, 1.0 / N) 
+        p = dict.fromkeys(W, 1.0 / N) 
+        
+        # power iteration: make up to max_iter iterations 
+        for _ in range(100): 
+            xlast = x 
+            x = dict.fromkeys(xlast.keys(), 0) 
+            for n in x: 
+    
+                # this matrix multiply looks odd because it is 
+                # doing a left multiply x^T=xlast^T*W 
+                for nbr in W[n]: 
+                    x[nbr] += 0.85 * xlast[n] * W[n][nbr]['weight'] 
+                x[n] += (1.0 - 0.85) * p[n] 
+    
+            # check convergence, l1 norm 
+            err = sum([abs(x[n] - xlast[n]) for n in x]) 
+            if err < N*0.000000001:
+                d = Counter(x)
+                arr= []
+                for key, value in d.most_common(k):
+                    print (key," : ",value )
+                    arr.append(copyFiles(key))
+                showImagesInWebPage({'Top k Images are:':arr},'task3output.html',True)
+                break
 
     elif taskNumber == 4:
         k = (int)(input("Enter value for k: "))
