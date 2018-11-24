@@ -464,6 +464,7 @@ startTime = datetime.datetime.now()
 
 outputDict={}
 G = nx.DiGraph()
+imageImageSparse = numpy.zeros(similarityMatrix.shape)
 taskNumber = (int)(input("Enter task number = "))
 while taskNumber>0:
 
@@ -495,7 +496,7 @@ while taskNumber>0:
         #creating a sparse matrix using the task 1 reduced graph
         task2choice = (int)(input("\nEnter 1 - K Means or 2 - Spectral Clustering - "))
         if task2choice == 1:
-            imageImageSparse = numpy.zeros(similarityMatrix.shape)
+
             for idx, key1 in enumerate(outputDict):
                 tempDict = outputDict[key1]
                 for idy,key2 in enumerate(tempDict):
