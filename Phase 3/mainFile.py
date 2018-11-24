@@ -24,7 +24,7 @@ from sklearn.metrics.pairwise import cosine_similarity as cosineSimilarity
 from sklearn.metrics.pairwise import euclidean_distances as euclideanDistance
 from sklearn.metrics.pairwise import manhattan_distances as manhattanDistance
 
-import task4
+import ppr
 
 # class Graph:
 #
@@ -558,8 +558,8 @@ while taskNumber>0:
         for i in range(1, 4):
             t = input("Enter seed #{}: ".format(i))
             startVectors.append(t)
-        startVectorIndices = task4.getIndexOfStartVectors(allImageIDs, startVectors)
-        topKIndices = np.asarray(task4.personalizedPageRank(imageImageSparse, startVectorIndices, k+3))
+        startVectorIndices = ppr.getIndexOfStartVectors(allImageIDs, startVectors)
+        topKIndices = np.asarray(ppr.personalizedPageRank(imageImageSparse, startVectorIndices, k+3))
         #print (topKIndices)
         
         imgPaths = []
@@ -573,7 +573,7 @@ while taskNumber>0:
                 continue
             filepath = copyFiles(imgId)
             imgPaths.append({imgId: filepath})
-        task4.showImagesInWebPageForPPR(imgPaths)
+        ppr.showImagesInWebPageForPPR(imgPaths)
 
     elif taskNumber == 5:
         print("Task 5 code here")
@@ -653,6 +653,8 @@ while taskNumber>0:
                     task6ClusterDict[key].append(copyFiles(imageID + ".jpg"))
                 print("created paths for "+str(key))
             showImagesInWebPage(task6ClusterDict,'task6output.html',True)
+
         if task6choice == 2:
             print("\nPPR based classification implementation code here")
+
     taskNumber = (int)(input("Enter task number = "))
