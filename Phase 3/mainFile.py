@@ -296,7 +296,7 @@ def createGraphFromClusterArr(clusterArr,clusterIDs) :
     print(" graph created")
     drawGraph(G)
 
-def copyFiles(filename,dirname) :
+def copyFiles(filename) :
     for path, subdirs, files in os.walk("./data/images/"):
         for name in files:
             if (filename in name):
@@ -304,15 +304,18 @@ def copyFiles(filename,dirname) :
                 #shutil.copy(os.path.join(path, name), dirname)
                 return os.path.join(path, name)
 
-def showImagesInWebPage(clusterDict):
+def showImagesInWebPage(clusterDict,webpagename,showClusterName):
     print("\n Creating Web Page")
-    f = open('kmeansoutput.html', 'w')
+    f = open(webpagename, 'w')
     message = """<html><head></head><body>"""
     f.write(message)
     # add html code here
     content = """<table><tbody>"""
-    for key in clusterDict:
-        content = content + """<tr><td><H1>""" + key + """</H1></td></tr><tr>"""
+    for idx,key in enumerate(clusterDict):
+        if not showClusterName :
+            content = content + """<tr><td><H1>Cluster """ + str(idx) + """</H1></td></tr><tr>"""
+        else:
+            content = content + """<tr><td><H1>""" + str(key) + """</H1></td></tr><tr>"""
         for idx, image in enumerate(clusterDict[key]):
             if not image == None and ".jpg" in image:
                 content = content + """<td><img src=\"""" + image + """\" height="100" width="100"></td>"""
@@ -322,18 +325,31 @@ def showImagesInWebPage(clusterDict):
     f.write(content)
     f.write("""</body></html>""")
     f.close()
-    filename = 'file:///Users/sumeetbhalla/PycharmProjects/mwdbphase3/' + 'kmeansoutput.html'
+    filename = 'file:///Users/sumeetbhalla/PycharmProjects/mwdbphase3/' + webpagename
     webbrowser.open_new_tab(filename)
 
 
 def splitImagesInClusters(clusterArr,clusterIDs) :
     #create folders with cluster numbers
-    for id in clusterIDs:
+    for id in range(len(clusterIDs)):
         #os.mkdir(id)
         clusterDict[id] = []
     print("\n Creating Cluster Dict with Image Paths")
     for idx, val in enumerate(clusterArr):
-        clusterDict[clusterIDs[val]].append(copyFiles(allImageIDs[idx]+".jpg",clusterIDs[val]))
+        #if len(clusterDict[clusterIDs[val]]) != 0:
+        clusterDict[val].append(copyFiles(allImageIDs[idx]+".jpg"))
+        print("created paths for " + str(val))
+        #else:
+            # indexOfImage = allImageIDs.index(clusterIDs[val])
+            # getKMostSimilarImagesAndScores(similarityMatrix)
+            # clusterDict[clusterIDs[val]].append
+    count = np.zeros(len(clusterIDs))
+    for idx, val in enumerate(clusterArr):
+        count[val] = count[val]+1
+    print ("cluster images inside each cluster")
+    for val in count:
+        print (val)
+
         #copyFiles(allImageIDs[idx]+".jpg",clusterIDs[val])
     #print(clusterDict)1
 
@@ -342,7 +358,8 @@ def splitImagesInClusters(clusterArr,clusterIDs) :
     #pickle.dump(clusterDict, pickling_on)
     #pickling_on.close()
 
-    showImagesInWebPage(clusterDict)
+
+    showImagesInWebPage(clusterDict,'kmeansoutput.html',False)
 
 
 def trigger_k_means(c):
@@ -371,6 +388,13 @@ def createAllModelMatrix(targetFileNames):
             finalVector = np.append(finalVector,deletedArr, axis=1)
     return  normalize(np.asfarray(finalVector, float)), fileDataNP[:,0]
 
+
+def loadDataset(filename, trainingSet={}):
+    with open(filename) as f:
+        for line in f:
+            s = line.strip().split(" ")
+            trainingSet[(s[0])] = s[1].strip()
+
 startTime = datetime.datetime.now()
 allImageIDs = []
 #using visual descriptors
@@ -386,11 +410,11 @@ indexes = doc.getElementsByTagName('number')
 for i in range(len(indexes)):
     otherLocationNames.append(titles[i].firstChild.data)
 
-print ("Target Location Name = "+str(locationName))
+#print ("Target Location Name = "+str(locationName))
 #print "Other Location Names = "+ str(otherLocationNames)
 for file in os.listdir("./data/img/"):
-    if locationName in file:
-        targetFileNames.append("./data/img/"+file)
+    #if locationName in file:
+    #    targetFileNames.append("./data/img/"+file)
     fileNamesToCompare.append("./data/img/"+file)
 
 print ("Location names to compare = "+str(len(fileNamesToCompare)))
@@ -444,7 +468,6 @@ taskNumber = (int)(input("Enter task number = "))
 while taskNumber>0:
 
     if taskNumber == 1:
-        #remove before demo
         task1output = os.path.isfile("task1output.pickle")
         if not task1output:
             k = (int)(input("Enter value for K = "))
@@ -467,42 +490,121 @@ while taskNumber>0:
         print (str(datetime.datetime.now()-startTime))
 
     elif taskNumber == 2:
-
-        print("Task 2 code here")
+        print("\nTask 2:\n")
         c = (int)(input("Enter number of Clusters c = "))
         #creating a sparse matrix using the task 1 reduced graph
-        imageImageSparse = numpy.zeros(similarityMatrix.shape)
-        for idx, key1 in enumerate(outputDict):
-            tempDict = outputDict[key1]
-            for idy,key2 in enumerate(tempDict):
-                col = allImageIDs.index(key2)
-                imageImageSparse[idx][col] = tempDict[key2]
+        task2choice = (int)(input("\nEnter 1 - K Means or 2 - Spectral Clustering - "))
+        if task2choice == 1:
+            imageImageSparse = numpy.zeros(similarityMatrix.shape)
+            for idx, key1 in enumerate(outputDict):
+                tempDict = outputDict[key1]
+                for idy,key2 in enumerate(tempDict):
+                    col = allImageIDs.index(key2)
+                    imageImageSparse[idx][col] = tempDict[key2]
 
-        imageImageSparse = similarityMatrix
-        allClustersArr,clusterIDs = trigger_k_means(c)
+            imageImageSparse = similarityMatrix
+            allClustersArr,clusterIDs = trigger_k_means(c)
 
-        print("\nK-Means clustering done")
-        print("Total Time taken to Execute")
-        print(str(datetime.datetime.now() - startTime))
-        startTime = datetime.datetime.now()
+            print("\nK-Means clustering done")
+            print("Total Time taken to Execute")
+            print(str(datetime.datetime.now() - startTime))
+            startTime = datetime.datetime.now()
 
-        clusterDict={}
-        splitImagesInClusters(allClustersArr,clusterIDs)
-        print("\nCreating Output Dict and Showing web page done")
-        print("Total Time taken to Execute")
-        print(str(datetime.datetime.now() - startTime))
-        startTime = datetime.datetime.now()
+            clusterDict={}
+            splitImagesInClusters(allClustersArr,clusterIDs)
+            print("\nCreating Output Dict and Showing web page done")
+            print("Total Time taken to Execute")
+            print(str(datetime.datetime.now() - startTime))
+            startTime = datetime.datetime.now()
+        if task2choice == 2:
+            print("\n Spectral Clustering Code Here")
 
     elif taskNumber == 3:
         print("Task 3 code here")
+        print("\nTask 3:\n")
 
     elif taskNumber == 4:
         print("Task 4 code here")
+        print("\nTask 4:\n")
 
     elif taskNumber == 5:
         print("Task 5 code here")
+        print("\nTask 5:\n")
 
     elif taskNumber == 6:
-        print("Task 5 code here")
+        print("\nTask 6:\n")
+        task6choice = (int)(input("\nEnter 1 - KNN or 2 - PPR based classiciation - "))
+        if task6choice == 1:
+            trainingSet = {}
+            loadDataset("./data/task6-testsample.txt", trainingSet)
+            labelled_dic_all_images = {}
+            # print(len(allImageIDs))
+            # print(similarityMatrix.shape)
+            uniqueLabels = []
+            allLables = []
+            for key, val in trainingSet.items():
+                if val not in uniqueLabels:
+                    uniqueLabels.append(val)
+                allLables.append(val)
 
+            for label in uniqueLabels:
+                labelled_dic_all_images[label] = []
+            loadDataset("./data/task6-testsample.txt", trainingSet)
+            k = (int)(input("enter value for k = "))
+            for idx, img in enumerate(allImageIDs):
+                minscore = 999
+                minlabel = ""
+                labelScoreArr = []
+                #print("Training Set items")
+                #print(trainingSet.items())
+                for key, val in trainingSet.items():
+                    # print(key,val)
+                    # minlabel = trainingSet[key]
+                    imgid = key
+                    # print(allimgi)
+                    # print(len(allImageIDs))
+
+                    if (imgid in allImageIDs):
+                        #print("match " + imgid)
+                        minindex = allImageIDs.index(imgid)
+                        currentscore = similarityMatrix[idx][minindex]
+                        labelScoreArr.append(currentscore)
+                        # if currentscore <= minscore:
+                        #     minscore = currentscore
+                        #     minlabel = trainingSet[key]
+                    else:
+                        print("no match " + imgid)
+                # find indexes of k smallest values
+                #print(len(labelScoreArr))
+
+                labelArr = np.asarray(labelScoreArr)
+                idx = np.argpartition(labelArr, k)
+                alllabelArr = np.asarray(allLables)
+                labels = alllabelArr[idx[:k]]
+                #print("Top K labels")
+                #print(labels)
+                labels, counts = np.unique(labels, return_counts=True)
+                #print("Unique labels")
+                #print(labels)
+                #print("Unique counts")
+                #print(counts)
+                tempCounts = counts.tolist()
+                minlabel = labels[tempCounts.index(max(counts))]
+
+                labelled_dic_all_images[minlabel].append(img)
+                # minscore = similarityMatrix[img][minindex]
+            # print (labelled_dic_all_images)
+            printAndSaveGraphProperly(labelled_dic_all_images, "KNN-Output.csv")
+            task6ClusterDict={}
+            for id in labelled_dic_all_images:
+                # os.mkdir(id)
+                task6ClusterDict[id] = []
+            print("\n Creating Cluster Dict with Image Paths")
+            for key, value in labelled_dic_all_images.items():
+                for imageID in value:
+                    task6ClusterDict[key].append(copyFiles(imageID + ".jpg"))
+                print("created paths for "+str(key))
+            showImagesInWebPage(task6ClusterDict,'task6output.html',True)
+        if task6choice == 2:
+            print("\nPPR based classification implementation code here")
     taskNumber = (int)(input("Enter task number = "))
