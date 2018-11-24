@@ -16,43 +16,36 @@ def getIndexOfStartVectors(allImageIDs, startVectors):
     startVectorIndices.append(allImageIDs.index(startVectors[2]))
     return startVectorIndices    
 
-def personalizedPageRank(imgImgArr, startVectors, k, c=0.15, epsilon=1e-6, max_iters = 100):
+def personalizedPageRank(imgImgArr, startVectors, k, c=0.15, allowedDiff=1e-6, maxIters = 100):
     
     # convert to (sparse) adjacency matrix
     sparseImgImgArray = csr_matrix(imgImgArr)
 
     # row normalize adjacency matrix
     m, n = sparseImgImgArray.shape
-    d = sparseImgImgArray.sum(axis=1)
-
-    # handling 0 entries
-    d = np.maximum(d, np.ones((n, 1)))
-    invd = 1.0 / d
-    invd = np.reshape(invd, (1,-1))
-    invD = spdiags(invd, 0, m, n)
-
-    # row normalized adj. mat. 
-    rowNormSparseImgImgArray = invD * sparseImgImgArray 
-    rowNormSparseImgImgArrayTranspose = rowNormSparseImgImgArray.T
+    rowNormSparseImgImgArrayTranspose = sparseImgImgArray.T
     
-    q = np.zeros((n, 1))
-    q[startVectors] = 1.0/len(startVectors)
+    # init seed vectors
+    seedVectors = np.zeros((n, 1))
+    seedVectors[startVectors] = 1.0/len(startVectors)
     
-    x = q
-    old_x = q
-    residuals = np.zeros((max_iters, 1))
+    # init PPR
+    cuurent_nodes = seedVectors
+    old_nodes = seedVectors
+    diff = np.zeros((maxIters, 1))
 
-    for i in range(max_iters):
-        x = (1-c)*(rowNormSparseImgImgArrayTranspose.dot(old_x)) + c*q
+    # iterate
+    for i in range(maxIters):
+        cuurent_nodes = (1-c)*(rowNormSparseImgImgArrayTranspose.dot(old_nodes)) + c*seedVectors
 
-        residuals[i] = norm(x - old_x, 1)
-       
-        if residuals[i] <= epsilon:
+        diff[i] = norm(cuurent_nodes - old_nodes, 1)       
+        if diff[i] <= allowedDiff:
            break
 
-        old_x = x
+        old_nodes = cuurent_nodes
     
-    topkIndices = x.argsort(axis=0)[-k:][::-1]
+    # find and return top k
+    topkIndices = cuurent_nodes.argsort(axis=0)[-k:][::-1]
     return topkIndices
 
 def showImagesInWebPageForPPR(imgPaths):
