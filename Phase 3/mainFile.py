@@ -24,6 +24,8 @@ from sklearn.metrics.pairwise import cosine_similarity as cosineSimilarity
 from sklearn.metrics.pairwise import euclidean_distances as euclideanDistance
 from sklearn.metrics.pairwise import manhattan_distances as manhattanDistance
 
+import task4
+
 # class Graph:
 #
 #     def __init__(self, graph):
@@ -328,7 +330,6 @@ def showImagesInWebPage(clusterDict,webpagename,showClusterName):
     filename = 'file:///Users/sumeetbhalla/PycharmProjects/mwdbphase3/' + webpagename
     webbrowser.open_new_tab(filename)
 
-
 def splitImagesInClusters(clusterArr,clusterIDs) :
     #create folders with cluster numbers
     for id in range(len(clusterIDs)):
@@ -525,8 +526,27 @@ while taskNumber>0:
         print("\nTask 3:\n")
 
     elif taskNumber == 4:
-        print("Task 4 code here")
-        print("\nTask 4:\n")
+        k = (int)(input("Enter value for k: "))
+        startVectors = []
+        for i in range(1, 4):
+            t = input("Enter seed #{}: ".format(i))
+            startVectors.append(t)
+        startVectorIndices = task4.getIndexOfStartVectors(allImageIDs, startVectors)
+        topKIndices = np.asarray(task4.personalizedPageRank(imageImageSparse, startVectorIndices, k+3))
+        #print (topKIndices)
+        
+        imgPaths = []
+        for imgId in startVectors:
+            filepath = copyFiles(imgId)
+            imgPaths.append({imgId: filepath})
+
+        for idx in topKIndices:
+            imgId = allImageIDs[idx[0]]
+            if imgId in startVectors:
+                continue
+            filepath = copyFiles(imgId)
+            imgPaths.append({imgId: filepath})
+        task4.showImagesInWebPageForPPR(imgPaths)
 
     elif taskNumber == 5:
         print("Task 5 code here")
