@@ -1,8 +1,8 @@
 import random
 from collections import defaultdict
 from operator import itemgetter
-import numpy as np
-import pickle
+
+
 class LSHImpl:
 
     def __init__(self,d,k,l,hashfamily):
@@ -15,18 +15,17 @@ class LSHImpl:
         self.build()
 
     def build(self):
+        """builds the index structure with the corresponding hash functions and buckets for each layer"""
         hashFuncs = [[self.hashfamily.makeHashFunc() for j in range(self.k)] for i in range(self.l)]
         self.buckets.extend([(hashFunc,defaultdict(lambda:[])) for hashFunc in hashFuncs])
-        # for hashFunc in hashFuncs:
-        #     for h in hashFunc:
-        #         print("offset" , h.offset)
-        #         print('-' * 50)
 
     def reindex(self,points,ids):
+        """indexes all the input vectors into the in memory index structure"""
         self.indexPoints(points,ids)
         return self.buckets
 
     def indexPoints(self,points,ids):
+        """indexes the image id of the input vectors into the corresponding buckets for each layer"""
         for hashFuncs, bucket in self.buckets:
             for i, point in enumerate(points):
                     bucket[self.computeHash(hashFuncs,point)].append(ids[i])
@@ -35,19 +34,16 @@ class LSHImpl:
                 #     bucket[computedHash].append(ids[i])
 
     def computeHash(self,hashFuncs,point):
+        """compute and combine the hashes of all the hash functions generated"""
         return self.hashfamily.combineHashes([h.computeHash(point) for h in hashFuncs])
 
-    def computeHash1(self,hashFuncs,point):
-        return self.hashfamily.combineHashes([(h.computeHash1(point)) for h in hashFuncs])
-
     def query(self, q, sv, allImageIDs, buckets, t):
+        """compute the hash of the query point to find other similar input points that fall in the same bucket"""
         candidates = set()
         queriedHashes = []
         for g,table in buckets:
-            print('bucket ength ', len(table))
-            # for hashFunc in g:
-            #         print("offet" , hashFunc.offset)
-            # print('-' * 50)
+            print('bucket length ', len(table))
+
             queriedHash = self.computeHash(g,q)
             matches = table.get(self.computeHash(g,q),[])
             candidates.update(matches)
@@ -55,12 +51,11 @@ class LSHImpl:
             print('queried   ' , candidates)
         candidates = [(ix,EuclideanHash.calculateSimilarity(q,sv[getImageIndex(allImageIDs,ix)])) for ix in candidates]
         candidates.sort(key=itemgetter(1))
-        # for g,table in buckets:
-        #     match = self.requery(q,buckets,queriedHash,t-len(candidates))
-        #     candidates.update(match)
+
         return [queriedHashes, candidates[:t]]
 
     def requery(self, q, sv ,allImageIDs, buckets, queriedHashes, remaining):
+        """compute the hash of the query point to find other similar input points that fall in neighboring buckets"""
         remainingCandidates = set()
         flag = 0
         count = 0
@@ -101,7 +96,8 @@ class EuclideanFamily:
         return random.uniform(0,w)
 
     def makeHashFunc(self):
-        w=1
+        """hash function computed using random projection vectors with offset of bucket size"""
+        w=0.5
         return EuclideanHash(self.random_vector(), self.offset(w), w)
 
     def dotproduct(u,v):
@@ -127,32 +123,17 @@ class EuclideanHash:
         return sum(ux*vx for ux,vx in zip(u,v))
 
     def calculateSimilarity(x,y):
+
         return sum((ab - cd)**2 for ab,cd in zip(x,y))**1/2
 
 def getImageIndex(allImageIDs,q):
+    """get image id for the specified index"""
     for i, imageID in enumerate(allImageIDs):
         if imageID in q:
             index  = i
             break
     return index
 
-# if __name__ == "__main__":
-#
-#     l = 2
-#     k = 2
-#     n = 1000
-#     d = 5
-#     hashFamily = EuclideanFamily(l,k,d)
-#
-#     lsh = LSHImpl(d,k,l,hashFamily)
-#
-# #     q = vectors[:int(n/10)]
-# # for query in q:
-# #     lsh.query(query,3)
-#
-#     pickle_out = open("lsh.pickle","wb")
-#     pickle.dump(lsh, pickle_out)
-#     pickle_out.close()
 
 
 

@@ -10,11 +10,13 @@ import numpy as np
 from sklearn.preprocessing import Normalizer, MinMaxScaler
 from task5 import LSHImpl, EuclideanFamily
 import webbrowser
+import datetime
 
-path = "/data/images/"
+path = "./data/img/"
 
 def copyFiles(filename) :
-    path = "/data/images/"
+    """returns the file names of the images """
+    path = "./data/images/"
     for path, subdirs, files in os.walk(path):
         for name in files:
             if (filename in name):
@@ -22,27 +24,29 @@ def copyFiles(filename) :
                 #shutil.copy(os.path.join(path, name), dirname)
                 return os.path.join(path, name)
 
-def showImagesInWebPage(clusterDict):
+def showImagesInWebPage(clusterDict,imageIds,k, l,d,w):
+    """display the similar images in a  web page"""
     f = open('lshOutput.html', 'w')
     message = """<html><head></head><body>"""
     f.write(message)
     # add html code here
     content = """<table><tbody>"""
-    # for key in clusterDict:
-    #     content = content + """<tr><td><H1>""" + key + """</H1></td></tr><tr>"""
+
+    content = content + """<tr><td><H1> L:""" + l +""" K:  """  + k +   """ D:  """ + d +  """ W:  """ + w + """</H1></td></tr><tr>"""
     for idx, image in enumerate(clusterDict):
         if not image == None and ".jpg" in image:
-            content = content + """<td><img src=\"""" + image + """\" height="100" width="100"></td>"""
+            content = content + """<th>"""+imageIds[idx]+"""</th><td><img src=\"""" + image + """\" height="100" width="100"></td>"""
     content = content + """</tr>"""
 
     content = content + """</tbody></table>"""
     f.write(content)
     f.write("""</body></html>""")
     f.close()
-    filename = 'file:///Users/student/MWDB/Phase%203/' + 'lshOutput.html'
+    filename = 'file:///Users/sidmadan/MWDB/Phase 3/' + 'lshOutput.html'
     webbrowser.open_new_tab(filename)
 
 def computeSvd(X,k):
+    """perform dimensionality reduction on the input vectors"""
     np_X = np.asarray(X, dtype = float) # CONVERTING locationImageData to np_locationImageData
     U, s, Vt = svd(X,full_matrices=False)
     Vt = Vt[:k,:]
@@ -64,6 +68,7 @@ def getCSVDataAsListData(fileName):
         return mainData
 
 def createAllModelMatrix(targetFileNames):
+    """concatenate all the visual models for a location and perform normalization"""
     finalVector = []
     for x, file in enumerate(targetFileNames):
         filedata = getCSVDataAsListData(file)
@@ -85,10 +90,11 @@ def createAllModelMatrix(targetFileNames):
     # finalVector = scaler.transform(finalVector) * 1000
     return  (np.asfarray(finalVector, float)), fileDataNP[:,0]
 
-if __name__ == "__main__":
-    start = time.time()
+
+def main():
+    startTime = datetime.datetime.now()
     allImageIDs = []
-    doc = xml.dom.minidom.parse("/Users/sidmadan/MWDBTest2/devset/devset_topics.xml")
+    doc = xml.dom.minidom.parse("./data/img/devset_topics.xml")
     titles = doc.getElementsByTagName('title')
     indexes = doc.getElementsByTagName('number')
     locationNames = []
@@ -121,16 +127,13 @@ if __name__ == "__main__":
     finalImageFeatureMatrix = finalImageFeatureMatrix.astype(np.float64)
     transformer = Normalizer().fit(finalImageFeatureMatrix) # fit does nothing.
     finalVector = transformer.transform(finalImageFeatureMatrix)
-    # sv = computeSvd(finalImageFeatureMatrix,400)
-    sv = finalImageFeatureMatrix
-    l = 4
-    k = 6
+    sv = computeSvd(finalImageFeatureMatrix,450)
+    #sv = finalImageFeatureMatrix
+    l = int(input("Enter l"))
+    k = int(input("Enter k "))
 
     num_neighbours = 2
     radius = 0.1
-    done = time.time()
-    elapsed = done - start
-    print(elapsed)
 
     # for i,point in enumerate(sv):
     #     for i in range(num_neighbours):
@@ -158,30 +161,41 @@ if __name__ == "__main__":
         index = 0
 
         index = getImageIndex(allImageIDs,queryPoint)
+        print(index)
         points = sv[index]
         q = int(input("Enter t for t similar images:"))
-        candidateslength = 0
+
         candidates = []
         queriedHashes, listofTuples = lsh.query(points,sv,allImageIDs,buckets,q)
         matches = ([x[0] for x in listofTuples])
+        print(listofTuples)
         candidates.append(matches)
         flat_list = [item for sublist in candidates for item in sublist]
-
-        while len(flat_list) < q:
+        iterations = 0
+        while len(flat_list) < q and iterations < 4:
+            iterations += 1
             remaining = q - len(flat_list)
             listofTuples = set(lsh.requery(queryPoint,sv,allImageIDs,buckets, queriedHashes, remaining))
+            print(listofTuples)
             matches = ([x[0] for x in listofTuples])
             candidates.append(matches)
         flat_list = [item for sublist in candidates for item in sublist]
+        flat_list = flat_list[:q]
         clusterDict = []
         print('main flat  ', flat_list)
-        print('main  ', candidates)
+
         for val in flat_list:
             val =  ''.join(val)
             clusterDict.append(copyFiles( val + ".jpg"))
-        showImagesInWebPage(clusterDict)
-        done = time.time()
-        elapsed = done - start
-        print(elapsed)
+        print('clsuterdcir  ' , clusterDict)
+        showImagesInWebPage(clusterDict,flat_list,str(k),str(l),str(d), str(0.5))
+        print (str(datetime.datetime.now()-startTime))
         c = input("enter c to continue or q to quit")
+
+
+if __name__ == "__main__":
+    main()
+
+
+
 
