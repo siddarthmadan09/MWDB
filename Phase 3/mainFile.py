@@ -332,7 +332,7 @@ def copyFiles(filename) :
 def showImagesInWebPage(clusterDict,webpagename,showClusterName):
     print("\n Creating Web Page")
     f = open(webpagename, 'w')
-    message = """<html><head></head><body>"""
+    message = """<html><head><link rel="stylesheet" href="output.css"></head><body>"""
     f.write(message)
     # add html code here
     content = """"""
@@ -772,7 +772,7 @@ while taskNumber>0:
                 for key, val in trainingSet.items():
                     # print(key,val)
                     # minlabel = trainingSet[key]
-                    imgid = key
+                    #imgid = key
                     # print(allimgi)
                     # print(len(allImageIDs))
 
@@ -813,8 +813,9 @@ while taskNumber>0:
                 X = labelled_dic_all_images[key]
                 Y = labelled_dic_all_images_scores[key]
                 Z = [x for _, x in sorted(zip(Y, X))]
+                Z = Z[::-1]
                 labelled_dic_all_images[key] = Z
-            print ("Values sorted based on score")
+            print ("Values sorted based on score with biggest scores first")
             for key in labelled_dic_all_images:
                 print(key)
                 print(len(labelled_dic_all_images[key]))
