@@ -199,25 +199,32 @@ def findSimilarityScoreBetweenImagesUsingL2(mainDict,otherDict):
 
 
 #get 5 most similar images to given image.
-def getKMostSimilarImagesAndScores(scoreArr,k):
+def getKMostSimilarImagesAndScores(index,scoreArr,k):
     a = np.asarray(scoreArr)
     #imageIDArray = np.asarray(allImageIDs)
     imageIDArray = np.asarray(allImageIDs)
-    idx = np.argpartition(a, k)
+    idx = np.argpartition(a, k+1)
     #keys = list(imageTermDict.keys())
-    imageIDs = imageIDArray[idx[:k]]
-    scores = scoreArr[idx[:k]]
-    return imageIDs,scoreArr
+    imageIDs = imageIDArray[idx[:k+1]]
+    scores = scoreArr[idx[:k+1]]
+    givenImage = allImageIDs[index]
+    givenImageIndex = list(imageIDs).index(givenImage)
+    imageIDs = np.delete(imageIDs,givenImageIndex)
+    scores = np.delete(scores,givenImageIndex)
+    return imageIDs,scores
 
-def getKMostSimilarImagesAndScoresAsDict(scoreArr,k):
+def getKMostSimilarImagesAndScoresAsDict(index,scoreArr,k):
     a = np.asarray(scoreArr)
-    idx = np.argpartition(a, k)
+    idx = np.argpartition(a, k+1)
     tmpArr = np.asarray(allImageIDs)
-    imageIDs = tmpArr[idx[:k]]
-    scores = scoreArr[idx[:k]]
+    imageIDs = tmpArr[idx[:k+1]]
+    scores = scoreArr[idx[:k+1]]
     tempDict={}
-    for idx,imageid in enumerate(imageIDs):
-        tempDict[imageid] = scores[idx]
+    if (imageIDs.size != k+1):
+        print(imageIDs.size,allImageIDs[index])
+    for ids,imageid in enumerate(imageIDs):
+        if not imageid == allImageIDs[index]:
+            tempDict[imageid] = scores[ids]
     return tempDict
 
 def getAllSimilarImagesAndScoresAsDict(scoreArr):
@@ -476,10 +483,10 @@ while taskNumber>0:
             #calculating most similar k values for each image
 
             for idx,row in enumerate(similarityMatrix):
-                outputDict[allImageIDs[idx]] = getKMostSimilarImagesAndScoresAsDict(row,k)
-                imageIDs,scoreIDs = getKMostSimilarImagesAndScores(row,k)
-                for idx,imageID in enumerate(imageIDs):
-                    G.add_edge(allImageIDs[idx], imageID, capacity=scoreIDs[idx])
+                outputDict[allImageIDs[idx]] = getKMostSimilarImagesAndScoresAsDict(idx,row,k)
+                imageIDs,scoreIDs = getKMostSimilarImagesAndScores(idx,row,k)
+                for ids,imageID in enumerate(imageIDs):
+                    G.add_edge(allImageIDs[idx], imageID, capacity=scoreIDs[ids])
             printAndSaveGraphProperly(outputDict,"task1-output.csv")
             pickling_on = open("task1output.pickle", "wb")
             pickle.dump(outputDict, pickling_on)
