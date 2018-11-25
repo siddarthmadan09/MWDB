@@ -78,31 +78,34 @@ def classify(similarityMatrix, trainingSet, allImageIDs):
             pprScoresForEachLabel = pprScores
         else:
             pprScoresForEachLabel = np.hstack((pprScoresForEachLabel, pprScores))
-    
-    print (pprScoresForEachLabel)
-
-    #tempCounts = pprScoresForEachLabel.tolist()
-    #minlabel = labels[tempCounts.index(max(counts))]
 
     labelIndices = (np.argmax(pprScoresForEachLabel, axis=1)).tolist()
-
-    #print (labelIndices)
     
     imgLabelPairs = []
+    # for i in range (len(allImageIDs)):
+    #     imgLabelPairs.append({labels[int(labelIndices[i])]:allImageIDs[i]})
     for i in range (len(allImageIDs)):
-        imgLabelPairs.append({labels[int(labelIndices[i])]:allImageIDs[i]})
-    
+        imgLabelPairs.append({
+            'imageId': allImageIDs[i],
+            'label': labels[int(labelIndices[i])],
+            'score': pprScoresForEachLabel[i][labelIndices[i]]
+            })
+
+    imgLabelPairs = sorted(imgLabelPairs, key=lambda k: k['score'], reverse=True)
+
     imgLabels = {}
+    # for each in imgLabelPairs:
+    #     for pair in each.items():
+    #         if pair[0] not in imgLabels.keys():
+    #             imgLabels[pair[0]] = []
+
+    #         imgLabels[pair[0]].append(pair[1])
     for each in imgLabelPairs:
-        for pair in each.items():
-            if pair[0] not in imgLabels.keys():
-                imgLabels[pair[0]] = []
+        if each['label'] not in imgLabels.keys():
+            imgLabels[each['label']] = []
+        imgLabels[each['label']].append(each['imageId'])
 
-            imgLabels[pair[0]].append(pair[1])
-
-    #print (imgLabels)
     return imgLabels
-
 
 
 def showImagesInWebPageForPPR(imgPaths):
