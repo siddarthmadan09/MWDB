@@ -415,9 +415,10 @@ def createAllModelMatrix(targetFileNames):
 
 def loadDataset(filename, trainingSet={}):
     with open(filename) as f:
-        for line in f:
-            s = line.strip().split(" ")
-            trainingSet[(s[0])] = s[1].strip()
+        for idx,line in enumerate(f):
+            if idx > 1:
+                s = line.strip().split()
+                trainingSet[(s[0])] = s[1].strip()
 
 startTime = datetime.datetime.now()
 allImageIDs = []
@@ -729,6 +730,7 @@ while taskNumber>0:
             trainingSet = {}
             loadDataset("./data/task6-testsample.txt", trainingSet)
             labelled_dic_all_images = {}
+            labelled_dic_all_images_scores = {}
             # print(len(allImageIDs))
             # print(similarityMatrix.shape)
             uniqueLabels = []
@@ -740,8 +742,17 @@ while taskNumber>0:
 
             for label in uniqueLabels:
                 labelled_dic_all_images[label] = []
+                labelled_dic_all_images_scores[label] = []
             loadDataset("./data/task6-testsample.txt", trainingSet)
-            k = (int)(input("enter value for k = "))
+            k = math.sqrt(len(allLables))
+            low = math.floor(k)
+            high = math.ceil(k)
+            if low % 2 == 0:
+                k = high
+            else:
+                k = low
+            print("k = "+str(k))
+            #k = (int)(input("enter value for k = "))
             for idx, img in enumerate(allImageIDs):
                 minscore = 999
                 minlabel = ""
@@ -755,25 +766,26 @@ while taskNumber>0:
                     # print(allimgi)
                     # print(len(allImageIDs))
 
-                    if (imgid in allImageIDs):
-                        #print("match " + imgid)
-                        minindex = allImageIDs.index(imgid)
+                    if (key in allImageIDs):
+                        # print("match " + imgid)
+                        minindex = allImageIDs.index(key)
                         currentscore = similarityMatrix[idx][minindex]
                         labelScoreArr.append(currentscore)
                         # if currentscore <= minscore:
                         #     minscore = currentscore
                         #     minlabel = trainingSet[key]
-                    else:
-                        print("no match " + imgid)
+                    #1else:
+                        # print("no match")
+                        # print(key,val)
                 # find indexes of k smallest values
                 #print(len(labelScoreArr))
 
                 labelArr = np.asarray(labelScoreArr)
                 idx = np.argpartition(labelArr, k)
                 alllabelArr = np.asarray(allLables)
-                labels = alllabelArr[idx[:k]]
-                #print("Top K labels")
-                #print(labels)
+                labels = alllabelArr[idx[:k]] #labels for top k images in training set for this image
+                # print("Top K labels")
+                # print(labels)
                 labels, counts = np.unique(labels, return_counts=True)
                 #print("Unique labels")
                 #print(labels)
@@ -783,8 +795,19 @@ while taskNumber>0:
                 minlabel = labels[tempCounts.index(max(counts))]
 
                 labelled_dic_all_images[minlabel].append(img)
+                labelled_dic_all_images_scores[minlabel].append(max(counts))
                 # minscore = similarityMatrix[img][minindex]
             # print (labelled_dic_all_images)
+            # sorting image dict array based on scores in another dict
+            for key in labelled_dic_all_images:
+                X = labelled_dic_all_images[key]
+                Y = labelled_dic_all_images_scores[key]
+                Z = [x for _, x in sorted(zip(Y, X))]
+                labelled_dic_all_images[key] = Z
+            print ("Values sorted based on score")
+            for key in labelled_dic_all_images:
+                print(key)
+                print(len(labelled_dic_all_images[key]))
             printAndSaveGraphProperly(labelled_dic_all_images, "KNN-Output.csv")
             task6ClusterDict={}
             for id in labelled_dic_all_images:
