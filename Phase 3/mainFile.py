@@ -23,8 +23,9 @@ from collections import Counter
 from sklearn.metrics.pairwise import cosine_similarity as cosineSimilarity
 from sklearn.metrics.pairwise import euclidean_distances as euclideanDistance
 from sklearn.metrics.pairwise import manhattan_distances as manhattanDistance
-
+import copy
 import ppr
+from numpy.linalg import eigh
 
 # class Graph:
 #
@@ -237,6 +238,19 @@ def printAndSaveGraphProperly(grph,name):
     with open(name, 'w') as f:
         [f.write('{0},{1}\n'.format(key, value)) for key, value in grph.items()]
 
+def makeclusters(vec,cx):
+    res1=[]
+    res2=[]
+    num_zero = len(np.where( vec == 0))/2
+    zero_in_1 = 0
+    for i,elem in enumerate(vec):
+        if(elem<0):
+            res1.append(cx[i])
+        elif(elem==0 and zero_in_1 <= num_zero):
+            res1.append(cx[i])
+        else:
+            res2.append(cx[i])
+    return res1, res2
 # def createClusterDict(listofclusters):
 #     clusterDict = {}
 #     for centroid in listofclusters:
@@ -527,6 +541,127 @@ while taskNumber>0:
             startTime = datetime.datetime.now()
         if task2choice == 2:
             print("\n Spectral Clustering Code Here")
+#            c = (int)(input("Enter number of Clusters c = "))
+            #creating a sparse matrix using the task 1 reduced graph
+            imageImageSparse = numpy.zeros(similarityMatrix.shape)
+            for idx, key1 in enumerate(outputDict):
+                tempDict = outputDict[key1]
+                for idy,key2 in enumerate(tempDict):
+                    col = allImageIDs.index(key2)
+                    imageImageSparse[idx][col] = tempDict[key2]
+#        imageImageSparse = similarityMatrix
+                
+            laplacian_matrix= copy.deepcopy(imageImageSparse)
+            for i,row in enumerate(laplacian_matrix):
+                idx=0
+                for j, n in enumerate(row):
+                    if(n>0.0):
+                        idx=idx+1
+                        row[j]=-1
+
+                laplacian_matrix[i][i] = idx
+            print("Laplacian Done!!")    
+            vals, vecs = eigh(laplacian_matrix)          
+            finalClus=[]
+            EigenVal=[]
+            EigenVec=[]
+            c1,c2=makeclusters(vecs[:,1],list(range(0,len(allImageIDs))))
+            finalClus.append(c1)
+            finalClus.append(c2)
+        
+        
+            while(len(finalClus)< c):
+                print("Length is ", len(finalClus))
+                len1 = len(finalClus[-1])
+                len2 = len(finalClus[-2])
+                lapmat1= np.zeros(( len1, len1 ))
+                for i in range(len1):
+                    for j in range(len1):
+                        if(i!=j):
+                            lapmat1[i][j] = laplacian_matrix[finalClus[-1][i]][finalClus[-1][j]]
+                        
+                for i in range(len1):
+                    lapmat1[i][i] = abs(sum(lapmat1[i]))
+
+                lapmat2= np.zeros(( len2, len2 ))
+                for i in range(len2):
+                    for j in range(len2):
+                        if(i!=j):
+                            lapmat2[i][j] = laplacian_matrix[finalClus[-2][i]][finalClus[-2][j]]
+                        
+                for i in range(len2):
+                    lapmat2[i][i] = abs(sum(lapmat2[i]))                
+                print("Laplacian !!")
+                vals1, vecs1 = eigh(lapmat1)
+                vals2, vecs2 = eigh(lapmat2)
+#               print("***** ",vals2[1], vals1[1])
+                print("^^^^^ ",len(vals2), len(vals1))
+                if(len(vals2)>1):
+                    print("***** ",vals2[1])
+                    EigenVal.append(vals2[1])
+                    EigenVec.append(vecs2[1])
+                
+                else:
+                    print("***** ",vals2[0])
+                    EigenVal.append(vals2[0])
+                    EigenVec.append(vecs2[0])
+                
+                
+                if(len(vals1)>2):
+                    print("***** ",vals1[1])
+                    EigenVal.append(vals1[1])
+                    EigenVec.append(vecs1[1])
+                
+                else:
+                    print("***** ",vals1[0])
+                    EigenVal.append(vals1[0])
+                    EigenVec.append(vecs1[0])
+                
+
+                
+                print("Eigen cal Done!!" , len(EigenVec))
+                minEVindex = EigenVal.index(min(EigenVal))
+                print('minindex = ', minEVindex)
+                print("Length of clus ", len(finalClus[minEVindex]))
+                print("Length of EigenVec ", len(EigenVec[minEVindex]))
+                if(len(EigenVec[minEVindex])<100):
+                    EigenVal[EigenVal.index(min(EigenVal))] = EigenVal[EigenVal.index(max(EigenVal))] + 0.6
+                minEVindex = EigenVal.index(min(EigenVal))
+                print('NEW minindex = ', minEVindex)
+                c1,c2 = makeclusters(EigenVec[minEVindex],finalClus[minEVindex])
+                print("removing cluster size ", len(finalClus[minEVindex]))
+                finalClus.remove(finalClus[minEVindex])
+                EigenVec.remove(EigenVec[minEVindex])
+                EigenVal.remove(EigenVal[minEVindex])
+                print("Length of FinalClus after ", len(finalClus))
+                print("Length of EigenVec after ", len(EigenVec))
+                print("Length of EigenVal after ", len(EigenVal))
+                print("appending cluster1 ", len(c1))
+                print("appending cluster1 ", len(c2))
+                finalClus.append(c1)
+                finalClus.append(c2)
+                               
+        
+            clusterSpecDict={}
+            
+            for i,row in enumerate(finalClus):
+                temparr1=[]
+                for j in row:
+                    temparr1.append(str(allImageIDs[j]))
+                clusterSpecDict[i]= temparr1
+                
+            task2SpectralClusterDict={}
+            for id in clusterSpecDict:
+                # os.mkdir(id)
+                task2SpectralClusterDict[id] = []
+            print("\n Creating Cluster Dict with Image Paths")
+            for key, value in clusterSpecDict.items():
+                for imageID in value:
+                    task2SpectralClusterDict[key].append(copyFiles(imageID + ".jpg"))
+                print("created paths for "+str(key))
+            showImagesInWebPage(task2SpectralClusterDict,'task2Spectraloutput.html',True)
+ 
+            print("****************************************************")
 
     elif taskNumber == 3:
         k = (int)(input("Enter value for k = "))
