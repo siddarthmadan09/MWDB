@@ -510,6 +510,13 @@ while taskNumber>0:
             pickling_on.close()
         else:
             outputDict = pickle.load(open("task1output.pickle", "rb"))
+        
+        imageImageSparse = numpy.zeros(similarityMatrix.shape)
+        for idx, key1 in enumerate(outputDict):
+            tempDict = outputDict[key1]
+            for idy,key2 in enumerate(tempDict):
+                col = allImageIDs.index(key2)
+                imageImageSparse[idx][col] = tempDict[key2]
 
         print ("\nTask 1 complete")
         print ("Total Time taken to Execute")
@@ -522,13 +529,13 @@ while taskNumber>0:
         task2choice = (int)(input("\nEnter 1 - K Means or 2 - Spectral Clustering - "))
         if task2choice == 1:
 
-            for idx, key1 in enumerate(outputDict):
-                tempDict = outputDict[key1]
-                for idy,key2 in enumerate(tempDict):
-                    col = allImageIDs.index(key2)
-                    imageImageSparse[idx][col] = tempDict[key2]
+            # for idx, key1 in enumerate(outputDict):
+            #     tempDict = outputDict[key1]
+            #     for idy,key2 in enumerate(tempDict):
+            #         col = allImageIDs.index(key2)
+            #         imageImageSparse[idx][col] = tempDict[key2]
 
-            imageImageSparse = similarityMatrix
+            #imageImageSparse = similarityMatrix
             allClustersArr,clusterIDs = trigger_k_means(c)
 
             print("\nK-Means clustering done")
@@ -544,15 +551,15 @@ while taskNumber>0:
             startTime = datetime.datetime.now()
         if task2choice == 2:
             print("\n Spectral Clustering Code Here")
-#            c = (int)(input("Enter number of Clusters c = "))
+            #c = (int)(input("Enter number of Clusters c = "))
             #creating a sparse matrix using the task 1 reduced graph
-            imageImageSparse = numpy.zeros(similarityMatrix.shape)
-            for idx, key1 in enumerate(outputDict):
-                tempDict = outputDict[key1]
-                for idy,key2 in enumerate(tempDict):
-                    col = allImageIDs.index(key2)
-                    imageImageSparse[idx][col] = tempDict[key2]
-#        imageImageSparse = similarityMatrix
+            # imageImageSparse = numpy.zeros(similarityMatrix.shape)
+            # for idx, key1 in enumerate(outputDict):
+            #     tempDict = outputDict[key1]
+            #     for idy,key2 in enumerate(tempDict):
+            #         col = allImageIDs.index(key2)
+            #         imageImageSparse[idx][col] = tempDict[key2]
+            #imageImageSparse = similarityMatrix
                 
             laplacian_matrix= copy.deepcopy(imageImageSparse)
             for i,row in enumerate(laplacian_matrix):
@@ -563,7 +570,7 @@ while taskNumber>0:
                         row[j]=-1
 
                 laplacian_matrix[i][i] = idx
-#            print("Laplacian Done!!")    
+            #print("Laplacian Done!!")    
             vals, vecs = eigh(laplacian_matrix)          
             finalClus=[]
             EigenVal=[]
@@ -574,7 +581,7 @@ while taskNumber>0:
         
         
             while(len(finalClus)< c):
-#                print("Length is ", len(finalClus))
+                #print("Length is ", len(finalClus))
                 len1 = len(finalClus[-1])
                 len2 = len(finalClus[-2])
                 lapmat1= np.zeros(( len1, len1 ))
@@ -594,53 +601,53 @@ while taskNumber>0:
                         
                 for i in range(len2):
                     lapmat2[i][i] = abs(sum(lapmat2[i]))                
-#                print("Laplacian !!")
+                #print("Laplacian !!")
                 vals1, vecs1 = eigh(lapmat1)
                 vals2, vecs2 = eigh(lapmat2)
-#               print("***** ",vals2[1], vals1[1])
-#               print("^^^^^ ",len(vals2), len(vals1))
+                #print("***** ",vals2[1], vals1[1])
+                #print("^^^^^ ",len(vals2), len(vals1))
                 if(len(vals2)>1):
-#                    print("***** ",vals2[1])
+                    #print("***** ",vals2[1])
                     EigenVal.append(vals2[1])
                     EigenVec.append(vecs2[1])
                 
                 else:
-#                    print("***** ",vals2[0])
+                    #print("***** ",vals2[0])
                     EigenVal.append(vals2[0])
                     EigenVec.append(vecs2[0])
                 
                 
                 if(len(vals1)>2):
-#                    print("***** ",vals1[1])
+                    #print("***** ",vals1[1])
                     EigenVal.append(vals1[1])
                     EigenVec.append(vecs1[1])
                 
                 else:
-#                    print("***** ",vals1[0])
+                    #print("***** ",vals1[0])
                     EigenVal.append(vals1[0])
                     EigenVec.append(vecs1[0])
                 
 
                 
-#                print("Eigen cal Done!!" , len(EigenVec))
+                #print("Eigen cal Done!!" , len(EigenVec))
                 minEVindex = EigenVal.index(min(EigenVal))
-#                print('minindex = ', minEVindex)
-#                print("Length of clus ", len(finalClus[minEVindex]))
-#                print("Length of EigenVec ", len(EigenVec[minEVindex]))
+                #print('minindex = ', minEVindex)
+                #print("Length of clus ", len(finalClus[minEVindex]))
+                #print("Length of EigenVec ", len(EigenVec[minEVindex]))
                 if(len(EigenVec[minEVindex])<100):
                     EigenVal[EigenVal.index(min(EigenVal))] = EigenVal[EigenVal.index(max(EigenVal))] + 0.6
                 minEVindex = EigenVal.index(min(EigenVal))
-#                print('NEW minindex = ', minEVindex)
+                #print('NEW minindex = ', minEVindex)
                 c1,c2 = makeclusters(EigenVec[minEVindex],finalClus[minEVindex])
-#                print("removing cluster size ", len(finalClus[minEVindex]))
+                #print("removing cluster size ", len(finalClus[minEVindex]))
                 finalClus.remove(finalClus[minEVindex])
                 EigenVec.remove(EigenVec[minEVindex])
                 EigenVal.remove(EigenVal[minEVindex])
-#                print("Length of FinalClus after ", len(finalClus))
-#                print("Length of EigenVec after ", len(EigenVec))
-#                print("Length of EigenVal after ", len(EigenVal))
-#                print("appending cluster1 ", len(c1))
-#                print("appending cluster1 ", len(c2))
+                #print("Length of FinalClus after ", len(finalClus))
+                #print("Length of EigenVec after ", len(EigenVec))
+                #print("Length of EigenVal after ", len(EigenVal))
+                #print("appending cluster1 ", len(c1))
+                #print("appending cluster1 ", len(c2))
                 finalClus.append(c1)
                 finalClus.append(c2)
                                
@@ -664,7 +671,7 @@ while taskNumber>0:
                 print("created paths for "+str(key))
             showImagesInWebPage(task2SpectralClusterDict,'task2Spectraloutput.html',True)
  
-#            print("****************************************************")
+            #print("****************************************************")
 
     elif taskNumber == 3:
         k = (int)(input("Enter value for k = "))
@@ -704,8 +711,10 @@ while taskNumber>0:
             t = input("Enter seed #{}: ".format(i))
             startVectors.append(t)
         startVectorIndices = ppr.getIndexOfStartVectors(allImageIDs, startVectors)
-        topKIndices = np.asarray(ppr.personalizedPageRank(imageImageSparse, startVectorIndices, k+3))
-        #print (topKIndices)
+        #topKIndices = np.asarray(ppr.personalizedPageRank(imageImageSparse, startVectorIndices, k+3))
+        pprScores = ppr.personalizedPageRank(imageImageSparse, startVectorIndices)
+        topKIndices = np.asarray(pprScores.argsort(axis=0)[-(k+3):][::-1])
+        print (topKIndices)
         
         imgPaths = []
         for imgId in startVectors:
@@ -715,6 +724,7 @@ while taskNumber>0:
         for idx in topKIndices:
             imgId = allImageIDs[idx[0]]
             if imgId in startVectors:
+                #print ("yes")
                 continue
             filepath = copyFiles(imgId)
             imgPaths.append({imgId: filepath})
@@ -725,7 +735,7 @@ while taskNumber>0:
 
     elif taskNumber == 6:
         print("\nTask 6:\n")
-        task6choice = (int)(input("\nEnter 1 - KNN or 2 - PPR based classiciation - "))
+        task6choice = (int)(input("\nEnter 1 - KNN or 2 - PPR based classification - "))
         if task6choice == 1:
             trainingSet = {}
             loadDataset("./data/task6-testsample.txt", trainingSet)
@@ -821,6 +831,25 @@ while taskNumber>0:
             showImagesInWebPage(task6ClusterDict,'task6output.html',True)
 
         if task6choice == 2:
-            print("\nPPR based classification implementation code here")
+            print("\nPPR based classification")
+            trainingSet = {}
+            loadDataset("./data/task6-testsample.txt", trainingSet)
+            
+            startTime = datetime.datetime.now()
+            imgLabels = ppr.classify(similarityMatrix, trainingSet, allImageIDs)
+            #ppr.showClassifiedImagesInWebPage(imgLabels)
+            task6ClusterDict={}
+            for id in imgLabels:
+                # os.mkdir(id)
+                task6ClusterDict[id] = []
+
+            for key, value in imgLabels.items():
+                for imageID in value:
+                    task6ClusterDict[key].append(copyFiles(imageID + ".jpg"))
+                print("created paths for "+str(key))
+            showImagesInWebPage(task6ClusterDict,'ppr-classified.html',True)
+
+            print ("Total Time taken to compute: ", str(datetime.datetime.now()-startTime))
+
 
     taskNumber = (int)(input("Enter task number = "))
