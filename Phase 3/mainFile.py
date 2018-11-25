@@ -560,7 +560,7 @@ while taskNumber>0:
                         row[j]=-1
 
                 laplacian_matrix[i][i] = idx
-            print("Laplacian Done!!")    
+#            print("Laplacian Done!!")    
             vals, vecs = eigh(laplacian_matrix)          
             finalClus=[]
             EigenVal=[]
@@ -571,7 +571,7 @@ while taskNumber>0:
         
         
             while(len(finalClus)< c):
-                print("Length is ", len(finalClus))
+#                print("Length is ", len(finalClus))
                 len1 = len(finalClus[-1])
                 len2 = len(finalClus[-2])
                 lapmat1= np.zeros(( len1, len1 ))
@@ -591,53 +591,53 @@ while taskNumber>0:
                         
                 for i in range(len2):
                     lapmat2[i][i] = abs(sum(lapmat2[i]))                
-                print("Laplacian !!")
+#                print("Laplacian !!")
                 vals1, vecs1 = eigh(lapmat1)
                 vals2, vecs2 = eigh(lapmat2)
 #               print("***** ",vals2[1], vals1[1])
-                print("^^^^^ ",len(vals2), len(vals1))
+#               print("^^^^^ ",len(vals2), len(vals1))
                 if(len(vals2)>1):
-                    print("***** ",vals2[1])
+#                    print("***** ",vals2[1])
                     EigenVal.append(vals2[1])
                     EigenVec.append(vecs2[1])
                 
                 else:
-                    print("***** ",vals2[0])
+#                    print("***** ",vals2[0])
                     EigenVal.append(vals2[0])
                     EigenVec.append(vecs2[0])
                 
                 
                 if(len(vals1)>2):
-                    print("***** ",vals1[1])
+#                    print("***** ",vals1[1])
                     EigenVal.append(vals1[1])
                     EigenVec.append(vecs1[1])
                 
                 else:
-                    print("***** ",vals1[0])
+#                    print("***** ",vals1[0])
                     EigenVal.append(vals1[0])
                     EigenVec.append(vecs1[0])
                 
 
                 
-                print("Eigen cal Done!!" , len(EigenVec))
+#                print("Eigen cal Done!!" , len(EigenVec))
                 minEVindex = EigenVal.index(min(EigenVal))
-                print('minindex = ', minEVindex)
-                print("Length of clus ", len(finalClus[minEVindex]))
-                print("Length of EigenVec ", len(EigenVec[minEVindex]))
+#                print('minindex = ', minEVindex)
+#                print("Length of clus ", len(finalClus[minEVindex]))
+#                print("Length of EigenVec ", len(EigenVec[minEVindex]))
                 if(len(EigenVec[minEVindex])<100):
                     EigenVal[EigenVal.index(min(EigenVal))] = EigenVal[EigenVal.index(max(EigenVal))] + 0.6
                 minEVindex = EigenVal.index(min(EigenVal))
-                print('NEW minindex = ', minEVindex)
+#                print('NEW minindex = ', minEVindex)
                 c1,c2 = makeclusters(EigenVec[minEVindex],finalClus[minEVindex])
-                print("removing cluster size ", len(finalClus[minEVindex]))
+#                print("removing cluster size ", len(finalClus[minEVindex]))
                 finalClus.remove(finalClus[minEVindex])
                 EigenVec.remove(EigenVec[minEVindex])
                 EigenVal.remove(EigenVal[minEVindex])
-                print("Length of FinalClus after ", len(finalClus))
-                print("Length of EigenVec after ", len(EigenVec))
-                print("Length of EigenVal after ", len(EigenVal))
-                print("appending cluster1 ", len(c1))
-                print("appending cluster1 ", len(c2))
+#                print("Length of FinalClus after ", len(finalClus))
+#                print("Length of EigenVec after ", len(EigenVec))
+#                print("Length of EigenVal after ", len(EigenVal))
+#                print("appending cluster1 ", len(c1))
+#                print("appending cluster1 ", len(c2))
                 finalClus.append(c1)
                 finalClus.append(c2)
                                
@@ -661,7 +661,7 @@ while taskNumber>0:
                 print("created paths for "+str(key))
             showImagesInWebPage(task2SpectralClusterDict,'task2Spectraloutput.html',True)
  
-            print("****************************************************")
+#            print("****************************************************")
 
     elif taskNumber == 3:
         k = (int)(input("Enter value for k = "))
