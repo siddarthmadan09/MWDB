@@ -350,8 +350,6 @@ def showImagesInWebPage(clusterDict,webpagename,showClusterName):
     f.write(content)
     f.write("""</body></html>""")
     f.close()
-    filename = 'file:///Users/student/MWDB/Phase%203/' + webpagename
-    webbrowser.open_new_tab(filename)
 
 def splitImagesInClusters(clusterArr,clusterIDs) :
     #create folders with cluster numbers
@@ -677,23 +675,17 @@ while taskNumber>0:
         k = (int)(input("Enter value for k = "))
         W = nx.stochastic_graph(G, weight='weight') 
         N = W.number_of_nodes() 
-        # Choose fixed starting vector if not given 
         x = dict.fromkeys(W, 1.0 / N) 
         p = dict.fromkeys(W, 1.0 / N) 
         
-        # power iteration: make up to max_iter iterations 
         for _ in range(100): 
             xlast = x 
             x = dict.fromkeys(xlast.keys(), 0) 
             for n in x: 
-    
-                # this matrix multiply looks odd because it is 
-                # doing a left multiply x^T=xlast^T*W 
                 for nbr in W[n]: 
                     x[nbr] += 0.85 * xlast[n] * W[n][nbr]['weight'] 
                 x[n] += (1.0 - 0.85) * p[n] 
     
-            # check convergence, l1 norm 
             err = sum([abs(x[n] - xlast[n]) for n in x]) 
             if err < N*0.000000001:
                 d = Counter(x)
