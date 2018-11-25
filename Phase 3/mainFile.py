@@ -117,6 +117,8 @@ from numpy.linalg import eigh
 #         col_count += 4
 #     tempTermArray.pop()
 #     return tempTermArray
+import task5b
+
 
 def getCSVDataAsListData(fileName):
         mainData = []
@@ -718,8 +720,7 @@ while taskNumber>0:
         ppr.showImagesInWebPageForPPR(imgPaths)
 
     elif taskNumber == 5:
-        print("Task 5 code here")
-        print("\nTask 5:\n")
+        task5b.main()
 
     elif taskNumber == 6:
         print("\nTask 6:\n")
