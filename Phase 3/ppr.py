@@ -11,19 +11,29 @@ from scipy.sparse import spdiags
 
 def getIndexOfStartVectors(allImageIDs, startVectors):
     startVectorIndices = []
-    startVectorIndices.append(allImageIDs.index(startVectors[0]))
-    startVectorIndices.append(allImageIDs.index(startVectors[1]))
-    startVectorIndices.append(allImageIDs.index(startVectors[2]))
+    for seed in startVectors:
+        if seed in allImageIDs:
+            startVectorIndices.append(allImageIDs.index(seed))
     return startVectorIndices    
 
-def personalizedPageRank(imgImgArr, startVectors, k, c=0.15, allowedDiff=1e-6, maxIters = 100):
+def personalizedPageRank(imgImgArr, startVectors, c=0.15, allowedDiff=1e-6, maxIters = 100):
     
     # convert to (sparse) adjacency matrix
     sparseImgImgArray = csr_matrix(imgImgArr)
 
     # row normalize adjacency matrix
     m, n = sparseImgImgArray.shape
-    rowNormSparseImgImgArrayTranspose = sparseImgImgArray.T
+    d = sparseImgImgArray.sum(axis=1)
+
+    # handling 0 entries
+    d = np.maximum(d, np.ones((n, 1)))
+    invd = 1.0 / d
+    invd = np.reshape(invd, (1,-1))
+    invD = spdiags(invd, 0, m, n)
+
+    # row normalized adj. mat. 
+    rowNormSparseImgImgArray = invD * sparseImgImgArray 
+    rowNormSparseImgImgArrayTranspose = rowNormSparseImgImgArray.T
     
     # init seed vectors
     seedVectors = np.zeros((n, 1))
@@ -45,8 +55,55 @@ def personalizedPageRank(imgImgArr, startVectors, k, c=0.15, allowedDiff=1e-6, m
         old_nodes = cuurent_nodes
     
     # find and return top k
-    topkIndices = cuurent_nodes.argsort(axis=0)[-k:][::-1]
-    return topkIndices
+    return cuurent_nodes
+
+
+def classify(similarityMatrix, trainingSet, allImageIDs):
+    pprScoresForEachLabel = []
+    # prep training data and labels
+    trainingData = {}
+    for pair in trainingSet.items():
+        if pair[1] not in trainingData.keys():
+            trainingData[pair[1]] = []
+
+        trainingData[pair[1]].append(pair[0])
+
+    labels = list(trainingData.keys())
+
+    for label, seeds in trainingData.items():
+        startVectorIndices = getIndexOfStartVectors(allImageIDs, seeds)
+        pprScores = personalizedPageRank(similarityMatrix, startVectorIndices, maxIters = 100)
+
+        if len(pprScoresForEachLabel) == 0:
+            pprScoresForEachLabel = pprScores
+        else:
+            pprScoresForEachLabel = np.hstack((pprScoresForEachLabel, pprScores))
+    
+    print (pprScoresForEachLabel)
+
+    #tempCounts = pprScoresForEachLabel.tolist()
+    #minlabel = labels[tempCounts.index(max(counts))]
+
+    labelIndices = (np.argmax(pprScoresForEachLabel, axis=1)).tolist()
+
+    #print (labelIndices)
+    
+    imgLabelPairs = []
+    for i in range (len(allImageIDs)):
+        imgLabelPairs.append({labels[int(labelIndices[i])]:allImageIDs[i]})
+    
+    imgLabels = {}
+    for each in imgLabelPairs:
+        for pair in each.items():
+            if pair[0] not in imgLabels.keys():
+                imgLabels[pair[0]] = []
+
+            imgLabels[pair[0]].append(pair[1])
+
+    #print (imgLabels)
+    return imgLabels
+
+
 
 def showImagesInWebPageForPPR(imgPaths):
     print("\n Creating Web Page")
@@ -70,5 +127,5 @@ def showImagesInWebPageForPPR(imgPaths):
     f.write(content)
     f.write("""</body></html>""")
     f.close()
-    filename = 'file:///home/leroy/Documents/CSE 515/Phase 3/' + 'pprout.html'
+    filename = 'file:///home/leroy/Documents/CSE 515/Phase 3/pprout.html'
     webbrowser.open_new_tab(filename)
