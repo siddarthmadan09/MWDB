@@ -42,8 +42,6 @@ def showImagesInWebPage(clusterDict,imageIds,k, l,d,w):
     f.write(content)
     f.write("""</body></html>""")
     f.close()
-    filename = 'file:///Users/sidmadan/MWDB/Phase 3/' + 'lshOutput.html'
-    webbrowser.open_new_tab(filename)
 
 def computeSvd(X,k):
     """perform dimensionality reduction on the input vectors"""
@@ -94,7 +92,7 @@ def createAllModelMatrix(targetFileNames):
 def main():
     startTime = datetime.datetime.now()
     allImageIDs = []
-    doc = xml.dom.minidom.parse("./data/img/devset_topics.xml")
+    doc = xml.dom.minidom.parse("./data/devset_topics.xml")
     titles = doc.getElementsByTagName('title')
     indexes = doc.getElementsByTagName('number')
     locationNames = []
