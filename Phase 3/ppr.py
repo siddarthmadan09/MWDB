@@ -110,7 +110,7 @@ def classify(similarityMatrix, trainingSet, allImageIDs):
 
 def showImagesInWebPageForPPR(imgPaths):
     print("\n Creating Web Page")
-    f = open('pprout.html', 'w')
+    f = open('task4PPRoutput.html', 'w')
     message = """<html><head></head><body>"""
     f.write(message)
     # add html code here
@@ -130,5 +130,5 @@ def showImagesInWebPageForPPR(imgPaths):
     f.write(content)
     f.write("""</body></html>""")
     f.close()
-    filename = 'file:///home/leroy/Documents/CSE 515/Phase 3/pprout.html'
+    filename = 'file:///home/leroy/Documents/CSE 515/Phase 3/task4PPRoutput.html'
     webbrowser.open_new_tab(filename)
