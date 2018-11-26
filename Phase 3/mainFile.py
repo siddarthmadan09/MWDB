@@ -280,9 +280,15 @@ def makeclusters(vec,cx):
 #     return set(allterms)
 
 def assign_clusters(current_centroids,clusterIDList):
-        res_dist = distance.cdist(imageImageSparse, current_centroids, metric='euclidean')
-        assigned_cluster = np.array([list(each).index(min(each)) for each in res_dist])
-        return assigned_cluster
+    res_dist = []
+    for centroid in clusterIDList:
+        if len(res_dist) == 0:
+            res_dist = imageImageSparse[allImageIDs.index(centroid)]
+        else:
+            res_dist = np.column_stack((res_dist,imageImageSparse[allImageIDs.index(centroid)]))
+    res_dist = distance.cdist(imageImageSparse, current_centroids, metric='euclidean')
+    assigned_cluster = np.array([list(each).index(min(each)) for each in res_dist])
+    return assigned_cluster
 
 def compute_centroid(previous_centroids, clusters):
     new_centroids = np.zeros(previous_centroids.shape)
@@ -290,7 +296,7 @@ def compute_centroid(previous_centroids, clusters):
     for i in range(len(previous_centroids)):
         current_cluster_indices = np.where(clusters == i)
         current_cluster = imageImageSparse[current_cluster_indices]
-        new_centroids[i] = np.mean(current_cluster, axis=0)
+
         #getting closest point to the mean centroid
         minDist = 999
         minindex = -1
@@ -299,7 +305,9 @@ def compute_centroid(previous_centroids, clusters):
             if minDist >= dst :
                 minDist = dst
                 minindex = idx
+        new_centroids[i] = imageImageSparse[minindex]
         newClusters.append(allImageIDs[minindex])
+        new_centroids[i] = np.mean(current_cluster, axis=0)
     return new_centroids,newClusters
 
 
