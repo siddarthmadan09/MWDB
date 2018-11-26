@@ -16,7 +16,7 @@ def getIndexOfStartVectors(allImageIDs, startVectors):
             startVectorIndices.append(allImageIDs.index(seed))
     return startVectorIndices    
 
-def personalizedPageRank(imgImgArr, startVectors, c=0.15, allowedDiff=1e-6, maxIters = 100):
+def personalizedPageRank(imgImgArr, startVectors, c=0.15, allowedDiff=1e-9, maxIters = 100):
     
     # convert to (sparse) adjacency matrix
     sparseImgImgArray = csr_matrix(imgImgArr)
