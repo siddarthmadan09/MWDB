@@ -97,7 +97,7 @@ class EuclideanFamily:
 
     def makeHashFunc(self):
         """hash function computed using random projection vectors with offset of bucket size"""
-        w=0.5
+        w=1
         return EuclideanHash(self.random_vector(), self.offset(w), w)
 
     def dotproduct(u,v):

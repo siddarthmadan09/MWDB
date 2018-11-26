@@ -186,7 +186,7 @@ def main():
             val =  ''.join(val)
             clusterDict.append(copyFiles( val + ".jpg"))
         print('clsuterdcir  ' , clusterDict)
-        showImagesInWebPage(clusterDict,flat_list,str(k),str(l),str(d), str(0.5))
+        showImagesInWebPage(clusterDict,flat_list,str(k),str(l),str(d), str(1))
         print (str(datetime.datetime.now()-startTime))
         c = input("enter c to continue or q to quit")
 
