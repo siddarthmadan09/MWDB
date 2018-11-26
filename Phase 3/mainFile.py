@@ -280,35 +280,35 @@ def makeclusters(vec,cx):
 #     return set(allterms)
 
 def assign_clusters(current_centroids,clusterIDList):
-    res_dist = []
-    for centroid in clusterIDList:
-        if len(res_dist) == 0:
-            res_dist = imageImageSparse[allImageIDs.index(centroid)]
-        else:
-            res_dist = np.column_stack((res_dist,imageImageSparse[allImageIDs.index(centroid)]))
+    # res_dist = []
+    # for centroid in clusterIDList:
+    #     if len(res_dist) == 0:
+    #         res_dist = imageImageSparse[allImageIDs.index(centroid)]
+    #     else:
+    #         res_dist = np.column_stack((res_dist,imageImageSparse[allImageIDs.index(centroid)]))
     res_dist = distance.cdist(imageImageSparse, current_centroids, metric='euclidean')
     assigned_cluster = np.array([list(each).index(min(each)) for each in res_dist])
     return assigned_cluster
 
 def compute_centroid(previous_centroids, clusters):
     new_centroids = np.zeros(previous_centroids.shape)
-    newClusters = []
+    #newClusters = []
     for i in range(len(previous_centroids)):
         current_cluster_indices = np.where(clusters == i)
         current_cluster = imageImageSparse[current_cluster_indices]
 
         #getting closest point to the mean centroid
-        minDist = 999
-        minindex = -1
-        for idx,row in enumerate(imageImageSparse):
-            dst = numpy.linalg.norm(new_centroids[i] - row)
-            if minDist >= dst :
-                minDist = dst
-                minindex = idx
-        new_centroids[i] = imageImageSparse[minindex]
-        newClusters.append(allImageIDs[minindex])
+        # minDist = 999
+        # minindex = -1
+        # for idx,row in enumerate(imageImageSparse):
+        #     dst = numpy.linalg.norm(new_centroids[i] - row)
+        #     if minDist >= dst :
+        #         minDist = dst
+        #         minindex = idx
+        # new_centroids[i] = imageImageSparse[minindex]
+        # newClusters.append(allImageIDs[minindex])
         new_centroids[i] = np.mean(current_cluster, axis=0)
-    return new_centroids,newClusters
+    return new_centroids
 
 
 def getRandomCentroids(c) :
@@ -406,10 +406,10 @@ def trigger_k_means(c):
     current_centroids,clusterIDs = getRandomCentroids(c)
     previous_centroids = []
     counter = 0
-    while not np.array_equal(previous_centroids, current_centroids) and counter < 20:
+    while not np.array_equal(previous_centroids, current_centroids) and counter < 30:
         assigned_clusters = assign_clusters(current_centroids,clusterIDs)
         previous_centroids = current_centroids
-        current_centroids,clusterIDs = compute_centroid(previous_centroids, assigned_clusters)
+        current_centroids = compute_centroid(previous_centroids, assigned_clusters)
         counter = counter+1
         #potential_func_value = self.calculate_potential_function(current_centroids, assigned_clusters)
         print("iteration "+str(counter))
