@@ -26,7 +26,7 @@ def copyFiles(filename) :
 
 def showImagesInWebPage(clusterDict,imageIds,k, l,d,w):
     """display the similar images in a  web page"""
-    f = open('lshOutput.html', 'w')
+    f = open('task5output.html', 'w')
     message = """<html><head></head><body>"""
     f.write(message)
     # add html code here
