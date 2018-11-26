@@ -42,13 +42,11 @@ class LSHImpl:
         candidates = set()
         queriedHashes = []
         for g,table in buckets:
-            print('bucket length ', len(table))
 
             queriedHash = self.computeHash(g,q)
             matches = table.get(self.computeHash(g,q),[])
             candidates.update(matches)
             queriedHashes.append(queriedHash)
-            print('queried   ' , candidates)
         candidates = [(ix,EuclideanHash.calculateSimilarity(q,sv[getImageIndex(allImageIDs,ix)])) for ix in candidates]
         candidates.sort(key=itemgetter(1))
 

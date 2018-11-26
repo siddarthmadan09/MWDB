@@ -127,8 +127,8 @@ def main():
     finalVector = transformer.transform(finalImageFeatureMatrix)
     sv = computeSvd(finalImageFeatureMatrix,450)
     #sv = finalImageFeatureMatrix
-    l = int(input("Enter l"))
-    k = int(input("Enter k "))
+    l = int(input("Enter l:  "))
+    k = int(input("Enter k:  "))
 
     num_neighbours = 2
     radius = 0.1
@@ -145,7 +145,6 @@ def main():
     # sv = np.append(sv,new,axis=0)
 
     (r,d ) = sv.shape
-    print(d)
 
     hashFamily = EuclideanFamily(l,k,d)
 
@@ -155,13 +154,13 @@ def main():
     #queryPoint = '10195754275'
     c = "c"
     while c != "q":
-        queryPoint = input("Enter query id:")
+        queryPoint = input("Enter query id:  ")
         index = 0
 
         index = getImageIndex(allImageIDs,queryPoint)
         print(index)
         points = sv[index]
-        q = int(input("Enter t for t similar images:"))
+        q = int(input("Enter t for t similar images:  "))
 
         candidates = []
         queriedHashes, listofTuples = lsh.query(points,sv,allImageIDs,buckets,q)
@@ -180,15 +179,13 @@ def main():
         flat_list = [item for sublist in candidates for item in sublist]
         flat_list = flat_list[:q]
         clusterDict = []
-        print('main flat  ', flat_list)
 
         for val in flat_list:
             val =  ''.join(val)
             clusterDict.append(copyFiles( val + ".jpg"))
-        print('clsuterdcir  ' , clusterDict)
         showImagesInWebPage(clusterDict,flat_list,str(k),str(l),str(d), str(1))
         print (str(datetime.datetime.now()-startTime))
-        c = input("enter c to continue or q to quit")
+        c = input("enter c to continue or q to quit:  ")
 
 
 if __name__ == "__main__":
