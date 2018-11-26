@@ -706,7 +706,6 @@ while taskNumber>0:
         #topKIndices = np.asarray(ppr.personalizedPageRank(imageImageSparse, startVectorIndices, k+3))
         pprScores = ppr.personalizedPageRank(imageImageSparse, startVectorIndices)
         topKIndices = np.asarray(pprScores.argsort(axis=0)[-(k+3):][::-1])
-        print (topKIndices)
         
         imgPaths = []
         for imgId in startVectors:
@@ -715,9 +714,8 @@ while taskNumber>0:
 
         for idx in topKIndices:
             imgId = allImageIDs[idx[0]]
-            if imgId in startVectors:
-                #print ("yes")
-                continue
+            # if imgId in startVectors:
+            #     continue
             filepath = copyFiles(imgId)
             imgPaths.append({imgId: filepath})
         ppr.showImagesInWebPageForPPR(imgPaths)
