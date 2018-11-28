@@ -762,15 +762,18 @@ while taskNumber>0:
                 labelled_dic_all_images[label] = []
                 labelled_dic_all_images_scores[label] = []
             loadDataset("./data/task6-testsample.txt", trainingSet)
-            k = math.sqrt(len(allLables))
-            low = math.floor(k)
-            high = math.ceil(k)
-            if low % 2 == 0:
-                k = high
+            inp = input("Press Y if you want to enter K else press N = ")
+            if inp == "N" :
+                k = math.sqrt(len(allLables))
+                low = math.floor(k)
+                high = math.ceil(k)
+                if low % 2 == 0:
+                    k = high
+                else:
+                    k = low
+                print("k = "+str(k))
             else:
-                k = low
-            print("k = "+str(k))
-            #k = (int)(input("enter value for k = "))
+                k = (int)(input("enter value for k = "))
             for idx, img in enumerate(allImageIDs):
                 minscore = 999
                 minlabel = ""
