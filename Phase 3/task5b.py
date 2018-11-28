@@ -24,7 +24,7 @@ def copyFiles(filename) :
                 #shutil.copy(os.path.join(path, name), dirname)
                 return os.path.join(path, name)
 
-def showImagesInWebPage(clusterDict,imageIds,k, l,d,w):
+def showImagesInWebPage(clusterDict,imageIds,k, l):
     """display the similar images in a  web page"""
     f = open('task5output.html', 'w')
     message = """<html><head></head><body>"""
@@ -32,7 +32,7 @@ def showImagesInWebPage(clusterDict,imageIds,k, l,d,w):
     # add html code here
     content = """<table><tbody>"""
 
-    content = content + """<tr><td><H1> L:""" + l +""" K:  """  + k +   """ D:  """ + d +  """ W:  """ + w + """</H1></td></tr><tr>"""
+    content = content + """<tr><td><H1> L:""" + l +""" K:  """  + k +"""</H1></td></tr><tr>"""
     for idx, image in enumerate(clusterDict):
         if not image == None and ".jpg" in image:
             content = content + """<th>"""+imageIds[idx]+"""</th><td><img src=\"""" + image + """\" height="100" width="100"></td>"""
@@ -183,7 +183,7 @@ def main():
         for val in flat_list:
             val =  ''.join(val)
             clusterDict.append(copyFiles( val + ".jpg"))
-        showImagesInWebPage(clusterDict,flat_list,str(k),str(l),str(d), str(1))
+        showImagesInWebPage(clusterDict,flat_list,str(k),str(l))
         print (str(datetime.datetime.now()-startTime))
         c = input("enter c to continue or q to quit:  ")
 
