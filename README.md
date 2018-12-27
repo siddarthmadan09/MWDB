@@ -1,4 +1,5 @@
 # MWDB
+Our project consists of 7 tasks that will be dealing with vector models, text and image features of data, finding latent semantics and finding top k related objects. In this phase we will be performing dimensionality reductions i.e reducing data from higher dimensions (Given features) to lower dimensions (Latent semantics) using algorithms such as Principal Component Analysis, Singular Value Decomposition, Latent Dirichlet Allocation on data matrices. We will also be performing Tensor Decompositions on multi modal Tensors using CP decomposition. For calculating the most related objects we will be using either textual descriptions or visual descriptors as measures of data.
 
 Pre-Requisites
 ------------------------------------
